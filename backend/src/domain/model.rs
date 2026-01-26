@@ -33,18 +33,29 @@ pub struct PlanNode {
     // NodeTypeが実体タイプの場合はSome
     // NodeTypeが箱タイプの場合はNone
     pub service_id: Option<Uuid>,
+
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub created_by: Uuid,
+    pub updated_by: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Scenario {
     pub id: Uuid,
-    pub name: String,
+    pub name: String, // e.g. "2026年度 期初計画"
     pub description: Option<String>,
 
     pub start_date: NaiveDate,
     pub end_date: NaiveDate,
-    pub is_locked: bool,
+    pub is_locked: bool, // シナリオの締めフラグ
+
     pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub created_by: Uuid,
+    pub updated_by: Uuid,
+    pub deleted_at: Option<DateTime<Utc>>,
+    pub deleted_by: Option<Uuid>,
 }
 
 // -------------------------------
@@ -65,6 +76,9 @@ pub struct AccountItem {
     pub description: Option<String>,
     pub account_type: AccountType,
     pub display_order: i32,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
 }
 
 // -------------------------------
@@ -86,6 +100,11 @@ pub struct PlEntry {
     pub account_item_id: Uuid,         // 科目
     pub amount: Decimal,               // 金額
     pub description: Option<String>,   // メモ
+
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub created_by: Uuid,
+    pub updated_by: Uuid,
 }
 
 // -------------------------------
@@ -98,4 +117,8 @@ pub struct Service {
     pub name: String,
     pub slug: String,
     pub display_order: i32,
+
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
 }
