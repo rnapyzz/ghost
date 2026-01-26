@@ -73,6 +73,7 @@ pub enum AccountType {
 pub struct AccountItem {
     pub id: Uuid,
     pub name: String,
+    pub code: String,
     pub description: Option<String>,
     pub account_type: AccountType,
     pub display_order: i32,
