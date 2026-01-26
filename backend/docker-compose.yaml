@@ -1,14 +1,14 @@
 services:
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "3000:3000"
     environment:
-      -DATABASE_URL=postgres:postgres:password@db:5432/ghost_db
+      - DATABASE_URL=postgres://postgres:password@db:5432/ghost_db
     depends_on:
       - db
-    volumes:
-      - .:/app
 
   db:
     image: postgres:17-alpine
