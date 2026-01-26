@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -9,11 +9,11 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NodeType {
-    Initiative,       // 箱
-    Project,          // 箱
-    SubProject,       // 箱
-    Job,              // 実体
-    AdjustmentBuffer, // 実体
+    Initiative,       // 箱: P/Lを作成するために子ノードを合計する
+    Project,          // 箱: P/Lを作成するために子ノードを合計する
+    SubProject,       // 箱: P/Lを作成するために子ノードを合計する
+    Job,              // 実体: Entryを直接持つ
+    AdjustmentBuffer, // 実体: Entryを直接持つ
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,6 +23,9 @@ pub struct PlanNode {
     pub description: Option<String>,
     pub display_order: i32, // 表示における並び順
 
+    pub scenario_id: Uuid, // 計画のスナップショットID
+    pub lineage_id: Uuid,  // 世代を超えて同じ意味のノードであることを認識するキー
+
     pub node_type: NodeType,     // ツリー構造のノードの種類
     pub parent_id: Option<Uuid>, // ツリー構造の親ノード, Rootの場合はNone
 
@@ -30,6 +33,18 @@ pub struct PlanNode {
     // NodeTypeが実体タイプの場合はSome
     // NodeTypeが箱タイプの場合はNone
     pub service_id: Option<Uuid>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Scenario {
+    pub id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+
+    pub start_date: NaiveDate,
+    pub end_date: NaiveDate,
+    pub is_locked: bool,
+    pub created_at: DateTime<Utc>,
 }
 
 // -------------------------------
@@ -57,15 +72,20 @@ pub struct AccountItem {
 // -------------------------------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EntryCategory {
+    Plan,
+    Result,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlEntry {
     pub id: Uuid,
-
-    pub target_month: NaiveDate, // 年月
-    pub node_id: Uuid,           // どのノードに紐づくP/Lか
-    pub account_item_id: Uuid,   // 科目
-    pub amount: Decimal,         // 金額
-
-    pub description: Option<String>, // メモ
+    pub target_month: NaiveDate,       // 年月
+    pub entry_category: EntryCategory, // 「確定値」か「計画値」か
+    pub node_id: Uuid,                 // どのノードに紐づくP/Lか
+    pub account_item_id: Uuid,         // 科目
+    pub amount: Decimal,               // 金額
+    pub description: Option<String>,   // メモ
 }
 
 // -------------------------------
@@ -78,16 +98,4 @@ pub struct Service {
     pub name: String,
     pub slug: String,
     pub display_order: i32,
-}
-
-// -------------------------------
-// 5. scenario
-// -------------------------------
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Scenario {
-    MasterPlan,  // 期初計画
-    RevisedPlan, // 改訂期初計画
-    ExecPlan,    // 実行計画
-    Actual,      // 実績
 }
