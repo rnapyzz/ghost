@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DATABASE_URL=postgres://postgres:password@db:5432/ghost_db
+      - DATABASE_URL=postgres://postgres:password@localhost:5432/ghost_db
     depends_on:
       - db
 
