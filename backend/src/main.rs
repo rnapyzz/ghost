@@ -8,7 +8,10 @@ use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use ghost_api::{presentation::handlers, state::AppState};
+use ghost_api::{
+    presentation::handlers::{account_items, auth, health, users},
+    state::AppState,
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -37,10 +40,12 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState::new(pool);
     let app = Router::new()
-        .route("/health_check", get(handlers::health::health_check))
-        .route("/auth/signup", post(handlers::auth::signup))
-        .route("/auth/login", post(handlers::auth::login))
-        .route("/users/me", get(handlers::users::get_me))
+        .route("/health_check", get(health::health_check))
+        .route("/auth/signup", post(auth::signup))
+        .route("/auth/login", post(auth::login))
+        .route("/users/me", get(users::get_me))
+        .route("/account-items", get(account_items::list))
+        .route("/account-items", post(account_items::create))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));

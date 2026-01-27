@@ -59,30 +59,6 @@ pub struct Scenario {
 }
 
 // -------------------------------
-// 2. 勘定科目定義, メタデータ
-// -------------------------------
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum AccountType {
-    Revenue,
-    CostOfGoodsSold,
-    SellingGeneralAdmin,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AccountItem {
-    pub id: Uuid,
-    pub name: String,
-    pub code: String,
-    pub description: Option<String>,
-    pub account_type: AccountType,
-    pub display_order: i32,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub deleted_at: Option<DateTime<Utc>>,
-}
-
-// -------------------------------
 // 3. P/L entries
 // -------------------------------
 
