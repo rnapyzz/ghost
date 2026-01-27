@@ -40,6 +40,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/health_check", get(handlers::health::health_check))
         .route("/auth/signup", post(handlers::auth::signup))
         .route("/auth/login", post(handlers::auth::login))
+        .route("/users/me", get(handlers::users::get_me))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));

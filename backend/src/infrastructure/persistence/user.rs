@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::domain::user::{User, UserRepository};
 
@@ -68,6 +69,29 @@ impl UserRepository for UserRepositoryImpl {
             WHERE email = $1
             "#,
             email
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(user)
+    }
+
+    async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<User>> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            SELECT
+                id,
+                name,
+                email,
+                password_hash,
+                role as "role: _",
+                created_at,
+                updated_at
+            FROM users
+            WHERE id = $1
+            "#,
+            id
         )
         .fetch_optional(&self.pool)
         .await?;

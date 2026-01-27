@@ -26,7 +26,7 @@ pub fn generate_token(user_id: Uuid, role: UserRole) -> anyhow::Result<String> {
         iat: Utc::now().timestamp() as usize,
     };
 
-    let secret = std::env::var("JWT_SECRET").expect("JWT_TOKEN must be set");
+    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
 
     let token = encode(
         &Header::default(),
