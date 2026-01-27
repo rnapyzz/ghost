@@ -39,6 +39,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/health_check", get(handlers::health::health_check))
         .route("/auth/signup", post(handlers::auth::signup))
+        .route("/auth/login", post(handlers::auth::login))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
