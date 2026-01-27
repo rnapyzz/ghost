@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::domain::user::UserRole;
+use crate::domain::{account_items::AccountType, user::UserRole};
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct SignUpRequest {
@@ -37,4 +37,17 @@ pub struct LoginRequest {
 pub struct AuthResponse {
     pub access_token: String,
     pub token_type: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateAccountItemRequest {
+    #[validate(length(min = 1, message = "Name is required"))]
+    pub name: String,
+
+    #[validate(length(min = 1, message = "Code is required"))]
+    pub code: String,
+
+    pub description: Option<String>,
+    pub account_type: AccountType,
+    pub display_order: i32,
 }
