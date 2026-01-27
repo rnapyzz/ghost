@@ -1,11 +1,14 @@
-use axum::{Router, routing::get};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use ghost_api::state::AppState;
+use ghost_api::{presentation::handlers, state::AppState};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -34,7 +37,8 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState::new(pool);
     let app = Router::new()
-        .route("/health", get(health_check))
+        .route("/health_check", get(handlers::health::health_check))
+        .route("/auth/signup", post(handlers::auth::signup))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
@@ -47,10 +51,6 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     Ok(())
-}
-
-async fn health_check() -> &'static str {
-    "OK"
 }
 
 async fn shutdown_signal() {
