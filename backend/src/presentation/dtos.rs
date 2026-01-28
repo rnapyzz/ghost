@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
@@ -61,4 +62,14 @@ pub struct CreateServiceRequest {
     pub slug: String,
 
     pub display_order: i32,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateScenarioRequest {
+    #[validate(length(min = 1, message = "Name is required"))]
+    pub name: String,
+
+    pub description: Option<String>,
+    pub start_date: NaiveDate,
+    pub end_date: NaiveDate,
 }
