@@ -45,5 +45,5 @@ impl Service {
 pub trait ServiceRepository: Send + Sync {
     async fn create(&self, service: &Service) -> anyhow::Result<Service>;
     async fn find_all(&self) -> anyhow::Result<Vec<Service>>;
-    async fn find_by_slug(&self) -> anyhow::Result<Option<Service>>;
+    async fn find_by_slug(&self, slug: &str) -> anyhow::Result<Option<Service>>;
 }
