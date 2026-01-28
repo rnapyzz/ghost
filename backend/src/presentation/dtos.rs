@@ -53,7 +53,7 @@ pub struct CreateAccountItemRequest {
 }
 
 #[derive(Debug, Deserialize, Validate)]
-pub struct CreateSericeRequest {
+pub struct CreateServiceRequest {
     #[validate(length(min = 1, message = "Name is required"))]
     pub name: String,
 
