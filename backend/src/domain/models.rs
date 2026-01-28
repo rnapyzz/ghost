@@ -40,24 +40,6 @@ pub struct PlanNode {
     pub updated_by: Uuid,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Scenario {
-    pub id: Uuid,
-    pub name: String, // e.g. "2026年度 期初計画"
-    pub description: Option<String>,
-
-    pub start_date: NaiveDate,
-    pub end_date: NaiveDate,
-    pub is_locked: bool, // シナリオの締めフラグ
-
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub created_by: Uuid,
-    pub updated_by: Uuid,
-    pub deleted_at: Option<DateTime<Utc>>,
-    pub deleted_by: Option<Uuid>,
-}
-
 // -------------------------------
 // 3. P/L entries
 // -------------------------------
