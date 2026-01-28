@@ -777,6 +777,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "jsonwebtoken",
+ "regex",
  "rust_decimal",
  "serde",
  "serde_json",

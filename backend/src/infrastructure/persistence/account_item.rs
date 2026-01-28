@@ -16,7 +16,7 @@ impl AccountItemRepositoryImpl {
 #[async_trait::async_trait]
 impl AccountItemRepository for AccountItemRepositoryImpl {
     async fn create(&self, item: &AccountItem) -> anyhow::Result<AccountItem> {
-        let account_item = sqlx::query_as!(
+        let rec = sqlx::query_as!(
             AccountItem,
             r#"
             INSERT INTO account_items
@@ -55,11 +55,11 @@ impl AccountItemRepository for AccountItemRepositoryImpl {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(account_item)
+        Ok(rec)
     }
 
     async fn find_all(&self) -> anyhow::Result<Vec<AccountItem>> {
-        let account_items = sqlx::query_as!(
+        let recs = sqlx::query_as!(
             AccountItem,
             r#"
             SELECT
@@ -80,6 +80,6 @@ impl AccountItemRepository for AccountItemRepositoryImpl {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(account_items)
+        Ok(recs)
     }
 }

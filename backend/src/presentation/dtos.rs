@@ -51,3 +51,14 @@ pub struct CreateAccountItemRequest {
     pub account_type: AccountType,
     pub display_order: i32,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateServiceRequest {
+    #[validate(length(min = 1, message = "Name is required"))]
+    pub name: String,
+
+    #[validate(length(min = 1, message = "Slug is required"))]
+    pub slug: String,
+
+    pub display_order: i32,
+}

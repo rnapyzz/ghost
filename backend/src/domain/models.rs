@@ -83,19 +83,3 @@ pub struct PlEntry {
     pub created_by: Uuid,
     pub updated_by: Uuid,
 }
-
-// -------------------------------
-// 4. service
-// -------------------------------
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Service {
-    pub id: Uuid,
-    pub name: String,
-    pub slug: String,
-    pub display_order: i32,
-
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub deleted_at: Option<DateTime<Utc>>,
-}

@@ -17,7 +17,7 @@ impl UserRepositoryImpl {
 #[async_trait::async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn create(&self, user: &User) -> anyhow::Result<User> {
-        let user = sqlx::query_as!(
+        let rec = sqlx::query_as!(
             User,
             r#"
             INSERT INTO users
@@ -50,11 +50,11 @@ impl UserRepository for UserRepositoryImpl {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(user)
+        Ok(rec)
     }
 
     async fn find_by_email(&self, email: &str) -> anyhow::Result<Option<User>> {
-        let user = sqlx::query_as!(
+        let rec = sqlx::query_as!(
             User,
             r#"
             SELECT
@@ -73,11 +73,11 @@ impl UserRepository for UserRepositoryImpl {
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(user)
+        Ok(rec)
     }
 
     async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<User>> {
-        let user = sqlx::query_as!(
+        let rec = sqlx::query_as!(
             User,
             r#"
             SELECT
@@ -96,6 +96,6 @@ impl UserRepository for UserRepositoryImpl {
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(user)
+        Ok(rec)
     }
 }
