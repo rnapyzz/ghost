@@ -66,7 +66,9 @@ CREATE TABLE plan_nodes (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by UUID NOT NULL REFERENCES users(id),
-    updated_by UUID NOT NULL REFERENCES users(id)
+    updated_by UUID NOT NULL REFERENCES users(id),
+    deleted_at TIMESTAMPTZ,
+    deleted_by UUID REFERENCES users(id)
 );
 
 CREATE TABLE pl_entries (

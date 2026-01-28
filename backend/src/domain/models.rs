@@ -4,43 +4,6 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 // -------------------------------
-// 1. ノード定義, データ構造
-// -------------------------------
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum NodeType {
-    Initiative,       // 箱: P/Lを作成するために子ノードを合計する
-    Project,          // 箱: P/Lを作成するために子ノードを合計する
-    SubProject,       // 箱: P/Lを作成するために子ノードを合計する
-    Job,              // 実体: Entryを直接持つ
-    AdjustmentBuffer, // 実体: Entryを直接持つ
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PlanNode {
-    pub id: Uuid,
-    pub title: String,
-    pub description: Option<String>,
-    pub display_order: i32, // 表示における並び順
-
-    pub scenario_id: Uuid, // 計画のスナップショットID
-    pub lineage_id: Uuid,  // 世代を超えて同じ意味のノードであることを認識するキー
-
-    pub node_type: NodeType,     // ツリー構造のノードの種類
-    pub parent_id: Option<Uuid>, // ツリー構造の親ノード, Rootの場合はNone
-
-    // どのserviceに紐づくか
-    // NodeTypeが実体タイプの場合はSome
-    // NodeTypeが箱タイプの場合はNone
-    pub service_id: Option<Uuid>,
-
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub created_by: Uuid,
-    pub updated_by: Uuid,
-}
-
-// -------------------------------
 // 3. P/L entries
 // -------------------------------
 
