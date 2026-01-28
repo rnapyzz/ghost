@@ -2,17 +2,17 @@ use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use validator::Validate;
 
 use crate::{
-    application::services::services::ServiceService,
+    application::services::scenarios::ScenarioService,
     domain::user::UserRole,
-    infrastructure::persistence::services::ServiceRepositoryImpl,
-    presentation::{dtos::CreateServiceRequest, extractors::AuthUser},
+    infrastructure::persistence::scenarios::ScenarioRepositoryImpl,
+    presentation::{dtos::CreateScenarioRequest, extractors::AuthUser},
     state::AppState,
 };
 
 pub async fn create(
     State(state): State<AppState>,
     auth_user: AuthUser,
-    Json(payload): Json<CreateServiceRequest>,
+    Json(payload): Json<CreateScenarioRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     if auth_user.role != UserRole::Admin {
         return Err((StatusCode::FORBIDDEN, "Permission denied".to_string()));
@@ -22,22 +22,23 @@ pub async fn create(
         return Err((StatusCode::BAD_REQUEST, format!("Validation error: {}", e)));
     }
 
-    let repo = ServiceRepositoryImpl::new(state.pool);
-    let service = ServiceService::new(repo);
+    let repo = ScenarioRepositoryImpl::new(state.pool);
+    let service = ScenarioService::new(repo);
 
     match service
-        .create(payload.name, payload.slug, payload.display_order)
+        .create(
+            payload.name,
+            payload.description,
+            payload.start_date,
+            payload.end_date,
+            auth_user.id,
+        )
         .await
     {
         Ok(res) => Ok((StatusCode::CREATED, Json(res))),
         Err(e) => {
-            let msg = e.to_string();
-            if msg.contains("Slug already exists") || msg.contains("Slug must contain") {
-                Err((StatusCode::BAD_REQUEST, msg))
-            } else {
-                tracing::error!("Create service error: {}", e);
-                Err((StatusCode::INTERNAL_SERVER_ERROR, msg))
-            }
+            tracing::error!("Create scenario error: {}", e);
+            Err((StatusCode::BAD_REQUEST, e.to_string()))
         }
     }
 }
@@ -46,8 +47,8 @@ pub async fn list(
     State(state): State<AppState>,
     _auth_user: AuthUser,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let repo = ServiceRepositoryImpl::new(state.pool);
-    let service = ServiceService::new(repo);
+    let repo = ScenarioRepositoryImpl::new(state.pool);
+    let service = ScenarioService::new(repo);
 
     match service.list_all().await {
         Ok(res) => Ok((StatusCode::OK, Json(res))),
