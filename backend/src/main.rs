@@ -9,7 +9,7 @@ use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use ghost_api::{
-    presentation::handlers::{account_items, auth, health, scenarios, services, users},
+    presentation::handlers::{account_items, auth, health, plan_nodes, scenarios, services, users},
     state::AppState,
 };
 
@@ -50,6 +50,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/scenarios", post(scenarios::create))
         .route("/services", get(services::list))
         .route("/services", post(services::create))
+        .route("/plan-nodes", get(plan_nodes::list))
+        .route("/plan-nodes", post(plan_nodes::create))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
