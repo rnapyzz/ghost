@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::domain::{account_items::AccountType, user::UserRole};
+use crate::domain::{account_items::AccountType, plan_nodes::NodeType, user::UserRole};
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct SignUpRequest {
@@ -72,4 +72,27 @@ pub struct CreateScenarioRequest {
     pub description: Option<String>,
     pub start_date: NaiveDate,
     pub end_date: NaiveDate,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreatePlanNodeRequest {
+    pub scenario_id: Uuid,
+
+    // Rootの場合はnullで送られてくる
+    pub parent_id: Option<Uuid>,
+
+    #[validate(length(min = 1, message = "Title is required"))]
+    pub title: String,
+
+    pub description: Option<String>,
+    pub node_type: NodeType,
+    pub display_order: i32,
+
+    // 実体タイプ（Job, Buffer）の場合のみ指定
+    pub service_id: Option<Uuid>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ListPlanNodesQuery {
+    pub scenario_id: Uuid,
 }

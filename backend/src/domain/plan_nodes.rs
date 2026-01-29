@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(type_name = "plan_node_type")]
+#[sqlx(type_name = "node_type")]
 pub enum NodeType {
     Initiative,       // 箱: P/Lを作成するために子ノードを合計する
     Project,          // 箱: P/Lを作成するために子ノードを合計する
