@@ -37,3 +37,4 @@ argon2 = "0.5.3"
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 validator = { version = "0.20.0", features = ["derive"] }
 regex = "1.12.2"
+rust_decimal_macros = "1.40.0"
