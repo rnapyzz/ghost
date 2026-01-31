@@ -2,21 +2,30 @@ use chrono::{NaiveDate, Utc};
 use rust_decimal::Decimal;
 use uuid::Uuid;
 
-use crate::domain::{
-    pl_entries::{EntryCategory, PlEntry, PlEntryRepository},
-    plan_nodes::PlanNodeRepository,
+use crate::{
+    domain::{
+        history::{ChangeType, PlEntryHistory, PlEntryHistoryRepository},
+        pl_entries::{EntryCategory, PlEntry, PlEntryRepository},
+        plan_nodes::PlanNodeRepository,
+    },
+    infrastructure::persistence::history::PlEntryHistoryRepositoryImpl,
 };
 
-pub struct PlEntryService<R: PlEntryRepository, N: PlanNodeRepository> {
+pub struct PlEntryService<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
+{
     entry_repo: R,
     node_repo: N,
+    history_repo: H,
 }
 
-impl<R: PlEntryRepository, N: PlanNodeRepository> PlEntryService<R, N> {
-    pub fn new(entry_repo: R, node_repo: N) -> Self {
+impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
+    PlEntryService<R, N, H>
+{
+    pub fn new(entry_repo: R, node_repo: N, history_repo: H) -> Self {
         Self {
             entry_repo,
             node_repo,
+            history_repo,
         }
     }
 
@@ -52,17 +61,30 @@ impl<R: PlEntryRepository, N: PlanNodeRepository> PlEntryService<R, N> {
 
         if let Some(mut entry) = existing_entries {
             // update
-            // TODO: entry_hisotryへ追加
+            // 履歴保存用帯ジェクトを作成
+            let history = PlEntryHistory::new(
+                entry.id,
+                ChangeType::Update,
+                Some(entry.amount),
+                amount,
+                user_id,
+                Some("API request".to_string()),
+            );
+
+            // update処理
             entry.amount = amount;
             entry.description = description;
             entry.updated_at = Utc::now();
             entry.updated_by = user_id;
 
             let updated = self.entry_repo.update(&entry).await?;
+
+            // 履歴を保存
+            self.history_repo.create(&history).await?;
+
             Ok(updated)
         } else {
             // create
-            // TODO: entry_historyへ追加
             let new_entry = PlEntry::new(
                 target_month,
                 entry_category,
@@ -72,8 +94,19 @@ impl<R: PlEntryRepository, N: PlanNodeRepository> PlEntryService<R, N> {
                 description,
                 user_id,
             );
-
             let created = self.entry_repo.create(&new_entry).await?;
+
+            // 履歴保存用オブジェクトを作成
+            let history = PlEntryHistory::new(
+                created.id,
+                ChangeType::Create,
+                None,
+                created.amount,
+                user_id,
+                Some("API request".to_string()),
+            );
+
+            self.history_repo.create(&history).await?;
 
             Ok(created)
         }
