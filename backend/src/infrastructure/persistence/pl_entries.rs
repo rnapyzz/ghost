@@ -2,7 +2,10 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::domain::pl_entries::{EntryCategory, PlEntry, PlEntryRepository};
+use crate::domain::{
+    history::PlEntryHistory,
+    pl_entries::{EntryCategory, PlEntry, PlEntryRepository},
+};
 
 #[derive(Debug, Clone)]
 pub struct PlEntryRepositoryImpl {

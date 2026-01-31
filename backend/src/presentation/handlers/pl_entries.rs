@@ -10,9 +10,9 @@ use validator::Validate;
 
 use crate::{
     application::services::pl_entries::PlEntryService,
-    domain::plan_nodes::PlanNodeRepository,
     infrastructure::persistence::{
-        pl_entries::PlEntryRepositoryImpl, plan_nodes::PlanNodeRepositoryImpl,
+        history::PlEntryHistoryRepositoryImpl, pl_entries::PlEntryRepositoryImpl,
+        plan_nodes::PlanNodeRepositoryImpl,
     },
     presentation::{
         dtos::{ListPlEntryQuery, SavePlEnetryRequest},
@@ -32,7 +32,8 @@ pub async fn save(
 
     let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
     let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
-    let service = PlEntryService::new(entry_repo, node_repo);
+    let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
+    let service = PlEntryService::new(entry_repo, node_repo, history_repo);
 
     match service
         .save_entry(
@@ -66,7 +67,8 @@ pub async fn list(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
     let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
-    let service = PlEntryService::new(entry_repo, node_repo);
+    let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
+    let service = PlEntryService::new(entry_repo, node_repo, history_repo);
 
     match service
         .list_by_node(query.node_id, query.entry_category)
