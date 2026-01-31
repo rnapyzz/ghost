@@ -1,9 +1,12 @@
 use chrono::NaiveDate;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::domain::{account_items::AccountType, plan_nodes::NodeType, user::UserRole};
+use crate::domain::{
+    account_items::AccountType, pl_entries::EntryCategory, plan_nodes::NodeType, user::UserRole,
+};
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct SignUpRequest {
@@ -95,4 +98,20 @@ pub struct CreatePlanNodeRequest {
 #[derive(Debug, Deserialize)]
 pub struct ListPlanNodesQuery {
     pub scenario_id: Uuid,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct SavePlEnetryRequest {
+    pub node_id: Uuid,
+    pub account_item_id: Uuid,
+    pub target_month: NaiveDate, // YYYY-MM-01
+    pub entry_category: EntryCategory,
+    pub amount: Decimal,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ListPlEntryQuery {
+    pub node_id: Uuid,
+    pub entry_category: EntryCategory,
 }

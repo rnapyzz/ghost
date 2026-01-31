@@ -26,6 +26,33 @@ pub struct PlEntry {
     pub updated_by: Uuid,
 }
 
+impl PlEntry {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        target_month: NaiveDate,
+        entry_category: EntryCategory,
+        node_id: Uuid,
+        account_item_id: Uuid,
+        amount: Decimal,
+        description: Option<String>,
+        user_id: Uuid,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            target_month,
+            entry_category,
+            node_id,
+            account_item_id,
+            amount,
+            description,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            created_by: user_id,
+            updated_by: user_id,
+        }
+    }
+}
+
 #[async_trait::async_trait]
 pub trait PlEntryRepository: Send + Sync {
     async fn find_by_cell(
