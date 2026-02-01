@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
+import {LoginForm} from "@/features/auth/components/LoginForm.tsx";
 
 function App() {
   return (
-    <div className="p-4">
-      <Button>Click me</Button>
-    </div>
+      <div>
+          <LoginForm />
+      </div>
   );
 }
 
