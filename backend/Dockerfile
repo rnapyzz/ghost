@@ -1,27 +1,42 @@
-FROM rust:1.90 as builder
+FROM rust:1.90
 
 WORKDIR /app
 
-COPY Cargo.toml Cargo.lock ./
+RUN cargo install cargo-watch
 
-RUN mkdir src && \
-    echo "fn main() { println!(\"if you see this, the build broken.\")}" > src/main.rs && \
-    cargo build --release && \
-    rm -rf target/release/deps/ghost_api*
+RUN cargo install sqlx-cli --no-default-features --features=native-tls,postgres
 
 COPY . .
 
-RUN cargo build --release
+CMD ["cargo", "watch", "-x", "run"]
 
-FROM debian:bookworm-slim
 
-WORKDIR /app
+# 以下本番用構成なので一旦コメントアウト
 
-RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
+# FROM rust:1.90 as builder
 
-COPY --from=builder /app/target/release/ghost_api /app/ghost_api
+# WORKDIR /app
 
-EXPOSE 3000
+# COPY Cargo.toml Cargo.lock ./
 
-CMD ["./ghost_api"]
+# RUN mkdir src && \
+#     echo "fn main() { println!(\"if you see this, the build broken.\")}" > src/main.rs && \
+#     cargo build --release && \
+#     rm -rf target/release/deps/ghost_api*
+
+# COPY . .
+
+# RUN cargo build --release
+
+# FROM debian:bookworm-slim
+
+# WORKDIR /app
+
+# RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# COPY --from=builder /app/target/release/ghost_api /app/ghost_api
+
+# EXPOSE 8080
+
+# CMD ["./ghost_api"]
 

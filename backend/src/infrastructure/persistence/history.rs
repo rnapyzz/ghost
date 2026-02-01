@@ -4,12 +4,12 @@ use crate::domain::history::{PlEntryHistory, PlEntryHistoryRepository};
 
 #[derive(Debug, Clone)]
 pub struct PlEntryHistoryRepositoryImpl {
-    pool: PgPool,
+    _pool: PgPool,
 }
 
 impl PlEntryHistoryRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self { _pool: pool }
     }
 }
 
