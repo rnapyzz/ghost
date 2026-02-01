@@ -6,12 +6,12 @@ use crate::domain::pl_entries::{EntryCategory, PlEntry, PlEntryRepository};
 
 #[derive(Debug, Clone)]
 pub struct PlEntryRepositoryImpl {
-    pool: PgPool,
+    _pool: PgPool,
 }
 
 impl PlEntryRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self { _pool: pool }
     }
 }
 
