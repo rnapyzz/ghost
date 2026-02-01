@@ -1,4 +1,4 @@
-use sqlx::PgPool;
+use sqlx::{PgConnection, PgPool};
 
 use crate::domain::history::{PlEntryHistory, PlEntryHistoryRepository};
 
@@ -15,7 +15,7 @@ impl PlEntryHistoryRepositoryImpl {
 
 #[async_trait::async_trait]
 impl PlEntryHistoryRepository for PlEntryHistoryRepositoryImpl {
-    async fn create(&self, history: &PlEntryHistory) -> anyhow::Result<()> {
+    async fn create(&self, tx: &mut PgConnection, history: &PlEntryHistory) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             INSERT INTO pl_entry_histories
@@ -39,7 +39,7 @@ impl PlEntryHistoryRepository for PlEntryHistoryRepositoryImpl {
             history.changed_by,
             history.operation_source,
         )
-        .execute(&self.pool)
+        .execute(tx)
         .await?;
 
         Ok(())

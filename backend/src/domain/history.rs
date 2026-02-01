@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use sqlx::PgConnection;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
@@ -54,5 +55,5 @@ impl PlEntryHistory {
 
 #[async_trait::async_trait]
 pub trait PlEntryHistoryRepository: Send + Sync {
-    async fn create(&self, hisotry: &PlEntryHistory) -> anyhow::Result<()>;
+    async fn create(&self, tx: &mut PgConnection, history: &PlEntryHistory) -> anyhow::Result<()>;
 }

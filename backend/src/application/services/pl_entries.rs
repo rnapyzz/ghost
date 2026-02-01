@@ -1,5 +1,6 @@
 use chrono::{NaiveDate, Utc};
 use rust_decimal::Decimal;
+use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
 use crate::{
@@ -8,11 +9,12 @@ use crate::{
         pl_entries::{EntryCategory, PlEntry, PlEntryRepository},
         plan_nodes::PlanNodeRepository,
     },
-    infrastructure::persistence::history::PlEntryHistoryRepositoryImpl,
+    presentation::dtos::SavePlEntryRequest,
 };
 
 pub struct PlEntryService<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
 {
+    pool: PgPool,
     entry_repo: R,
     node_repo: N,
     history_repo: H,
@@ -21,8 +23,9 @@ pub struct PlEntryService<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntr
 impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
     PlEntryService<R, N, H>
 {
-    pub fn new(entry_repo: R, node_repo: N, history_repo: H) -> Self {
+    pub fn new(pool: PgPool, entry_repo: R, node_repo: N, history_repo: H) -> Self {
         Self {
+            pool,
             entry_repo,
             node_repo,
             history_repo,
@@ -53,10 +56,81 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
             ));
         }
 
-        // 既存エントリーの検索
+        // トランザクション開始
+        let mut tx = self.pool.begin().await?;
+
+        // ロジックの実行
+        let result = self
+            .save_entry_logic(
+                &mut tx,
+                node_id,
+                account_item_id,
+                target_month,
+                entry_category,
+                amount,
+                description,
+                user_id,
+            )
+            .await?;
+
+        // コミット
+        tx.commit().await?;
+
+        Ok(result)
+    }
+
+    pub async fn save_bulk(
+        &self,
+        requests: Vec<SavePlEntryRequest>,
+        user_id: Uuid,
+    ) -> anyhow::Result<()> {
+        // トランザクション開始
+        let mut tx = self.pool.begin().await?;
+
+        for req in requests {
+            // ノードの種類チェック
+            let node = self
+                .node_repo
+                .find_by_id(req.node_id)
+                .await?
+                .ok_or_else(|| anyhow::anyhow!("Node not found"))?;
+            if !node.node_type.is_entity() {
+                return Err(anyhow::anyhow!("Cannot input entries to Container nodes"));
+            }
+
+            // ロジックの実行
+            self.save_entry_logic(
+                &mut tx,
+                req.node_id,
+                req.account_item_id,
+                req.target_month,
+                req.entry_category,
+                req.amount,
+                req.description,
+                user_id,
+            )
+            .await?;
+        }
+
+        // コミット
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn save_entry_logic(
+        &self,
+        tx: &mut PgConnection,
+        node_id: Uuid,
+        account_item_id: Uuid,
+        target_month: NaiveDate,
+        entry_category: EntryCategory,
+        amount: Decimal,
+        description: Option<String>,
+        user_id: Uuid,
+    ) -> anyhow::Result<PlEntry> {
         let existing_entries = self
             .entry_repo
-            .find_by_cell(node_id, account_item_id, target_month, &entry_category)
+            .find_by_cell(tx, node_id, account_item_id, target_month, &entry_category)
             .await?;
 
         if let Some(mut entry) = existing_entries {
@@ -68,7 +142,7 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
                 Some(entry.amount),
                 amount,
                 user_id,
-                Some("API request".to_string()),
+                Some("Bulk/API".to_string()),
             );
 
             // update処理
@@ -77,10 +151,10 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
             entry.updated_at = Utc::now();
             entry.updated_by = user_id;
 
-            let updated = self.entry_repo.update(&entry).await?;
+            let updated = self.entry_repo.update(tx, &entry).await?;
 
             // 履歴を保存
-            self.history_repo.create(&history).await?;
+            self.history_repo.create(tx, &history).await?;
 
             Ok(updated)
         } else {
@@ -94,7 +168,7 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
                 description,
                 user_id,
             );
-            let created = self.entry_repo.create(&new_entry).await?;
+            let created = self.entry_repo.create(tx, &new_entry).await?;
 
             // 履歴保存用オブジェクトを作成
             let history = PlEntryHistory::new(
@@ -103,10 +177,10 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
                 None,
                 created.amount,
                 user_id,
-                Some("API request".to_string()),
+                Some("Bulk/API".to_string()),
             );
 
-            self.history_repo.create(&history).await?;
+            self.history_repo.create(tx, &history).await?;
 
             Ok(created)
         }
@@ -117,6 +191,9 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
         node_id: Uuid,
         category: EntryCategory,
     ) -> anyhow::Result<Vec<PlEntry>> {
-        self.entry_repo.find_by_node(node_id, &category).await
+        let mut conn = self.pool.acquire().await?;
+        self.entry_repo
+            .find_by_node(&mut conn, node_id, &category)
+            .await
     }
 }
