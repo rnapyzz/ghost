@@ -5,7 +5,6 @@ use axum::{
     response::IntoResponse,
 };
 
-use rust_decimal::Decimal;
 use validator::Validate;
 
 use crate::{
@@ -15,7 +14,7 @@ use crate::{
         plan_nodes::PlanNodeRepositoryImpl,
     },
     presentation::{
-        dtos::{ListPlEntryQuery, SavePlEnetryRequest},
+        dtos::{BulkSavePlEntryRequest, ListPlEntryQuery, SavePlEntryRequest},
         extractors::AuthUser,
     },
     state::AppState,
@@ -24,7 +23,7 @@ use crate::{
 pub async fn save(
     State(state): State<AppState>,
     auth_user: AuthUser,
-    Json(payload): Json<SavePlEnetryRequest>,
+    Json(payload): Json<SavePlEntryRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     if let Err(e) = payload.validate() {
         return Err((StatusCode::BAD_REQUEST, format!("Validation error: {}", e)));
@@ -33,7 +32,8 @@ pub async fn save(
     let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
     let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
     let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
-    let service = PlEntryService::new(entry_repo, node_repo, history_repo);
+
+    let service = PlEntryService::new(state.pool.clone(), entry_repo, node_repo, history_repo);
 
     match service
         .save_entry(
@@ -60,6 +60,30 @@ pub async fn save(
     }
 }
 
+pub async fn bulk_save(
+    State(state): State<AppState>,
+    auth_user: AuthUser,
+    Json(payload): Json<BulkSavePlEntryRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    if let Err(e) = payload.validate() {
+        return Err((StatusCode::BAD_REQUEST, format!("Validation error: {}", e)));
+    }
+
+    let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
+    let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
+
+    let service = PlEntryService::new(state.pool.clone(), entry_repo, node_repo, history_repo);
+
+    match service.save_bulk(payload.entries, auth_user.id).await {
+        Ok(_) => Ok((StatusCode::OK, "Bulk save successful")),
+        Err(e) => {
+            tracing::error!("Bulk save error: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
+    }
+}
+
 pub async fn list(
     State(state): State<AppState>,
     _auth_user: AuthUser,
@@ -68,7 +92,8 @@ pub async fn list(
     let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
     let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
     let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
-    let service = PlEntryService::new(entry_repo, node_repo, history_repo);
+
+    let service = PlEntryService::new(state.pool.clone(), entry_repo, node_repo, history_repo);
 
     match service
         .list_by_node(query.node_id, query.entry_category)

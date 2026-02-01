@@ -1,11 +1,8 @@
 use chrono::NaiveDate;
-use sqlx::PgPool;
+use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
-use crate::domain::{
-    history::PlEntryHistory,
-    pl_entries::{EntryCategory, PlEntry, PlEntryRepository},
-};
+use crate::domain::pl_entries::{EntryCategory, PlEntry, PlEntryRepository};
 
 #[derive(Debug, Clone)]
 pub struct PlEntryRepositoryImpl {
@@ -22,6 +19,7 @@ impl PlEntryRepositoryImpl {
 impl PlEntryRepository for PlEntryRepositoryImpl {
     async fn find_by_cell(
         &self,
+        tx: &mut PgConnection,
         node_id: Uuid,
         account_item_id: Uuid,
         target_month: NaiveDate,
@@ -53,13 +51,13 @@ impl PlEntryRepository for PlEntryRepositoryImpl {
             target_month,
             category as _
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(tx)
         .await?;
 
         Ok(rec)
     }
 
-    async fn create(&self, entry: &PlEntry) -> anyhow::Result<PlEntry> {
+    async fn create(&self, tx: &mut PgConnection, entry: &PlEntry) -> anyhow::Result<PlEntry> {
         let rec = sqlx::query_as!(
             PlEntry,
             r#"
@@ -102,13 +100,13 @@ impl PlEntryRepository for PlEntryRepositoryImpl {
             entry.created_by,
             entry.updated_by,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(tx)
         .await?;
 
         Ok(rec)
     }
 
-    async fn update(&self, entry: &PlEntry) -> anyhow::Result<PlEntry> {
+    async fn update(&self, tx: &mut PgConnection, entry: &PlEntry) -> anyhow::Result<PlEntry> {
         let rec = sqlx::query_as!(
             PlEntry,
             r#"
@@ -138,7 +136,7 @@ impl PlEntryRepository for PlEntryRepositoryImpl {
             entry.updated_by,
             entry.id
         )
-        .fetch_one(&self.pool)
+        .fetch_one(tx)
         .await?;
 
         Ok(rec)
@@ -146,6 +144,7 @@ impl PlEntryRepository for PlEntryRepositoryImpl {
 
     async fn find_by_node(
         &self,
+        tx: &mut PgConnection,
         node_id: Uuid,
         category: &EntryCategory,
     ) -> anyhow::Result<Vec<PlEntry>> {
@@ -171,7 +170,7 @@ impl PlEntryRepository for PlEntryRepositoryImpl {
             node_id,
             category as _
         )
-        .fetch_all(&self.pool)
+        .fetch_all(tx)
         .await?;
 
         Ok(recs)

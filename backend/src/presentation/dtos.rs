@@ -101,13 +101,19 @@ pub struct ListPlanNodesQuery {
 }
 
 #[derive(Debug, Deserialize, Validate)]
-pub struct SavePlEnetryRequest {
+pub struct SavePlEntryRequest {
     pub node_id: Uuid,
     pub account_item_id: Uuid,
     pub target_month: NaiveDate, // YYYY-MM-01
     pub entry_category: EntryCategory,
     pub amount: Decimal,
     pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct BulkSavePlEntryRequest {
+    #[validate(nested)]
+    pub entries: Vec<SavePlEntryRequest>,
 }
 
 #[derive(Debug, Deserialize)]

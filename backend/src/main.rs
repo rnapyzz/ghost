@@ -54,8 +54,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/services", post(services::create))
         .route("/plan-nodes", get(plan_nodes::list))
         .route("/plan-nodes", post(plan_nodes::create))
-        .route("/plan-entries", get(pl_entries::list))
-        .route("/plan-entries", post(pl_entries::save))
+        .route("/pl-entries", get(pl_entries::list))
+        .route("/pl-entries", post(pl_entries::save))
+        .route("/pl-entries/bulk", post(pl_entries::bulk_save))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));

@@ -1,6 +1,7 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use sqlx::PgConnection;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
@@ -57,18 +58,20 @@ impl PlEntry {
 pub trait PlEntryRepository: Send + Sync {
     async fn find_by_cell(
         &self,
+        tx: &mut PgConnection,
         node_id: Uuid,
         account_item_id: Uuid,
         target_month: NaiveDate,
         category: &EntryCategory,
     ) -> anyhow::Result<Option<PlEntry>>;
 
-    async fn create(&self, entry: &PlEntry) -> anyhow::Result<PlEntry>;
+    async fn create(&self, tx: &mut PgConnection, entry: &PlEntry) -> anyhow::Result<PlEntry>;
 
-    async fn update(&self, entry: &PlEntry) -> anyhow::Result<PlEntry>;
+    async fn update(&self, tx: &mut PgConnection, entry: &PlEntry) -> anyhow::Result<PlEntry>;
 
     async fn find_by_node(
         &self,
+        tx: &mut PgConnection,
         node_id: Uuid,
         category: &EntryCategory,
     ) -> anyhow::Result<Vec<PlEntry>>;
