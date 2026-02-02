@@ -97,7 +97,7 @@ pub struct CreatePlanNodeRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct ListPlanNodesQuery {
-    pub scenario_id: Uuid,
+    pub scenario_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize, Validate)]

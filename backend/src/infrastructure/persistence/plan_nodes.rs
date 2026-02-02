@@ -77,6 +77,38 @@ impl PlanNodeRepository for PlanNodeRepositoryImpl {
         Ok(rec)
     }
 
+    async fn find_recent(&self, limit: i64) -> anyhow::Result<Vec<PlanNode>> {
+        let recs = sqlx::query_as!(
+            PlanNode,
+            r#"
+            SELECT
+                id,
+                scenario_id,
+                parent_id,
+                lineage_id,
+                title,
+                description,
+                node_type as "node_type: _",
+                display_order,
+                service_id,
+                created_at,
+                updated_at,
+                created_by,
+                updated_by,
+                deleted_at,
+                deleted_by
+            FROM plan_nodes
+            ORDER BY created_at DESC
+            LIMIT $1
+            "#,
+            limit
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(recs)
+    }
+
     async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<PlanNode>> {
         let rec = sqlx::query_as!(
             PlanNode,
