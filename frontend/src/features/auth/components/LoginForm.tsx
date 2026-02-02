@@ -22,8 +22,6 @@ export function LoginForm() {
                 password,
             });
 
-            console.log("ログイン成功!!", response.data);
-
             localStorage.setItem("token", response.data.access_token);
 
             navigate("/dashboard");

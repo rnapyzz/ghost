@@ -21,6 +21,11 @@ export function DashboardPage() {
         retry: false,
     });
 
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
+    };
+
     if (isError) {
         navigate("/login");
         return null;
@@ -31,22 +36,26 @@ export function DashboardPage() {
     }
 
     return (
-        <div className="p-6 space-y-4">
+        <div className="h-screen p-6 space-y-4 bg-slate-50">
             <div className="text-center text-slate-900 font-semibold text-xl">
                 ようこそ、ダッシュボードページへ
             </div>
             <div>
-                <Card>
-                    <CardHeader>ログイン情報</CardHeader>
-                    <CardContent>
-                        <p>ID: {user?.id}</p>
-                        <p>name: {user?.name}</p>
-                        <p>email: {user?.email}</p>
+                <Card className="rounded-md">
+                    <CardHeader className="text-slate-900 text-center">
+                        ログイン情報
+                    </CardHeader>
+                    <CardContent className="py-4">
+                        <p className="text-slate-900">ID: {user?.id}</p>
+                        <p className="text-slate-900">name: {user?.name}</p>
+                        <p className="text-slate-900">email: {user?.email}</p>
                     </CardContent>
                 </Card>
             </div>
             <div className="flex justify-center">
-                <Button className="bg-slate-800">ログアウト</Button>
+                <Button onClick={handleLogout} className="bg-slate-800">
+                    ログアウト
+                </Button>
             </div>
         </div>
     );
