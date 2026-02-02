@@ -23,6 +23,28 @@ export type PlanNode = {
     updated_at: string;
     created_by: string;
     updated_by: string;
-    deleted_at?: string;
-    deleted_by?: string;
+};
+
+export type Scenario = {
+    id: string;
+    name: string;
+    description?: string;
+    start_date: string; // YYYY-MM-DD
+    end_date: string; // YYYY-MM-DD
+    is_locked: boolean;
+    created_at: string;
+    updated_at: string;
+    created_by: string;
+    updated_by: string;
+};
+
+export type CreateScenarioDTO = {
+    name: string;
+    description?: string;
+    start_date: string;
+    end_date: string;
+};
+
+export type UpdateScenarioDTO = Partial<CreateScenarioDTO> & {
+    is_locked?: boolean;
 };
