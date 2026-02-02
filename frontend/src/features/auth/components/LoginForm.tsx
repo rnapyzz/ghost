@@ -1,16 +1,38 @@
+import { type SyntheticEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { type SyntheticEvent, useState } from "react";
+import { api } from "@/lib/api.ts";
 
 export function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleSubmit = (e: SyntheticEvent) => {
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e: SyntheticEvent) => {
         e.preventDefault();
-        console.log("入力された値: ", { email, password });
+
+        try {
+            const response = await api.post("/auth/login", {
+                email,
+                password,
+            });
+
+            console.log("ログイン成功!!", response.data);
+
+            localStorage.setItem("token", response.data.access_token);
+
+            navigate("/dashboard");
+        } catch (error) {
+            console.error("ログイン失敗...", error);
+            alert(
+                "ログインに失敗しました。メールアドレスかパスワードが間違っています。",
+            );
+        }
     };
     return (
         <Card className="rounded-md w-[380px]">
