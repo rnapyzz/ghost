@@ -5,7 +5,10 @@ use axum::{
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
+use axum::http::{HeaderValue, Method};
+use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use ghost_api::{
@@ -37,8 +40,13 @@ async fn main() -> anyhow::Result<()> {
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
-        .expect("Failed to migrate datebase");
+        .expect("Failed to migrate database");
     tracing::info!("Migration success");
+
+    let cors = CorsLayer::new()
+        .allow_origin("http://localhost:5173".parse::<HeaderValue>()?).allow_methods(
+        [Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE]
+    ).allow_headers([CONTENT_TYPE, AUTHORIZATION]);
 
     let state = AppState::new(pool);
     let app = Router::new()
@@ -57,6 +65,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/pl-entries", get(pl_entries::list))
         .route("/pl-entries", post(pl_entries::save))
         .route("/pl-entries/bulk", post(pl_entries::bulk_save))
+        .layer(cors)
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
