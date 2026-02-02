@@ -67,7 +67,12 @@ pub async fn list(
     let repo = PlanNodeRepositoryImpl::new(state.pool);
     let service = PlanNodeService::new(repo);
 
-    match service.list_by_scenario(query.scenario_id).await {
+    let result = match query.scenario_id {
+        Some(id) => service.list_by_scenario(id).await,
+        None => service.list_recent(100).await,
+    };
+
+    match result {
         Ok(nodes) => Ok((StatusCode::OK, Json(nodes))),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }

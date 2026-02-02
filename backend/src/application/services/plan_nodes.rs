@@ -66,6 +66,10 @@ impl<R: PlanNodeRepository> PlanNodeService<R> {
         Ok(created)
     }
 
+    pub async fn list_recent(&self, limit: i64) -> anyhow::Result<Vec<PlanNode>> {
+        self.repository.find_recent(limit).await
+    }
+
     pub async fn list_by_scenario(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlanNode>> {
         self.repository.find_by_scenario_id(scenario_id).await
     }

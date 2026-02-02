@@ -129,6 +129,7 @@ impl PlanNode {
 #[async_trait::async_trait]
 pub trait PlanNodeRepository: Send + Sync {
     async fn create(&self, node: &PlanNode) -> anyhow::Result<PlanNode>;
+    async fn find_recent(&self, limit: i64) -> anyhow::Result<Vec<PlanNode>>;
     async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<PlanNode>>;
     async fn find_by_scenario_id(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlanNode>>;
 }
