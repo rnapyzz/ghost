@@ -34,7 +34,7 @@ export function AppLayout() {
                             ダッシュボード
                         </li>
                         <li className="p-2 bg-white hover:bg-slate-100 rounded shadow-sm text-sm text-slate-900 cursor-pointer">
-                            プロジェクト一覧
+                            ノード一覧
                         </li>
                     </ul>
                 </nav>
