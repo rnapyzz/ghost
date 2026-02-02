@@ -1,7 +1,18 @@
-import { Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button.tsx";
 
 export function AppLayout() {
+    const location = useLocation();
+
+    const getLinkClass = (path: string) => {
+        const isActive = location.pathname === path;
+        return `block w-full p-2 rounded shadow-sm text-sm transition-colors ${
+            isActive
+                ? "bg-slate-400 text-white font-semibold"
+                : "bg-white text-slate-900 hover:bg-slate-100"
+        }`;
+    };
+
     return (
         <div className="h-screen flex flex-col">
             {/* header */}
@@ -30,11 +41,21 @@ export function AppLayout() {
                 {/* sidebar 2 */}
                 <nav className="w-56 p-4 bg-slate-50 border-r border-slate-200 overflow-y-auto">
                     <ul className="space-y-2">
-                        <li className="p-2 bg-slate-700 rounded shadow-sm text-sm text-white font-semibold">
-                            ダッシュボード
+                        <li>
+                            <Link
+                                to="/dashboard"
+                                className={getLinkClass("/dashboard")}
+                            >
+                                ダッシュボード
+                            </Link>
                         </li>
-                        <li className="p-2 bg-white hover:bg-slate-100 rounded shadow-sm text-sm text-slate-900 cursor-pointer">
-                            ノード一覧
+                        <li>
+                            <Link
+                                to="/nodes"
+                                className={getLinkClass("/nodes")}
+                            >
+                                ノード一覧
+                            </Link>
                         </li>
                     </ul>
                 </nav>
