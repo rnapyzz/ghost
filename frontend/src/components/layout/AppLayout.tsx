@@ -57,6 +57,14 @@ export function AppLayout() {
                                 ノード一覧
                             </Link>
                         </li>
+                        <li>
+                            <Link
+                                to="/scenarios"
+                                className={getLinkClass("/scenarios")}
+                            >
+                                シナリオ設定
+                            </Link>
+                        </li>
                     </ul>
                 </nav>
                 <main className="flex-1 bg-white overflow-y-auto p-2">
