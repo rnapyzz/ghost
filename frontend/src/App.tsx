@@ -4,6 +4,7 @@ import { DashboardPage } from "@/pages/dashboard/DashboardPage.tsx";
 import { AppLayout } from "@/components/layout/AppLayout.tsx";
 import { NodesPage } from "@/pages/nodes/NodesPage.tsx";
 import { ScenariosPage } from "@/pages/scenarios/ScenariosPage.tsx";
+import { ServicesPage } from "@/pages/services/ServicesPage.tsx";
 
 function App() {
     return (
