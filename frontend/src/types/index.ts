@@ -48,3 +48,18 @@ export type CreateScenarioDTO = {
 export type UpdateScenarioDTO = Partial<CreateScenarioDTO> & {
     is_locked?: boolean;
 };
+
+export type Service = {
+    id: string;
+    name: string;
+    slug: string;
+    display_order: number;
+    created_at: string;
+    updated_at: string;
+};
+
+export type CreateServiceDTO = {
+    name: string;
+    slug: string;
+    display_order: number;
+};

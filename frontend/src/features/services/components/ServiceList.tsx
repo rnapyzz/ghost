@@ -7,24 +7,21 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table.tsx";
-import { useScenarios } from "@/features/scenarios/api/useScenarios.ts";
+import { useServices } from "@/features/services/api/useServices.ts";
 import { useState } from "react";
-import type { Scenario } from "@/types";
-import { ScenarioFormDialog } from "@/features/scenarios/components/ScenarioFormDialog.tsx";
+import type { Service } from "@/types";
 import { Button } from "@/components/ui/button.tsx";
 import { Plus } from "lucide-react";
+import { ServiceFormDialog } from "@/features/services/api/ServiceFormDialog.tsx";
 
-export function ScenarioList() {
-    const { data: scenarios, isLoading, isError } = useScenarios();
-    // const { deleteScenario } = useScenarioMutations();
+export function ServiceList() {
+    const { data: services, isLoading, isError } = useServices();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingScenario, setEditingScenario] = useState<Scenario | null>(
-        null,
-    );
+    const [editingService, setEditingService] = useState<Service | null>(null);
 
     const handleCreate = () => {
-        setEditingScenario(null);
+        setEditingService(null);
         setIsDialogOpen(true);
     };
 
@@ -32,20 +29,18 @@ export function ScenarioList() {
 
     if (isError)
         return (
-            <div className="p-4 text-red-500">
-                シナリオデータの取得に失敗しました
-            </div>
+            <div className="p-4 text-red-500">サービスの取得に失敗しました</div>
         );
 
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-800">
-                    シナリオ管理
+                    サービス設定
                 </h2>
-                <Button onClick={handleCreate} className="">
+                <Button onClick={handleCreate}>
                     <Plus className="h-4 w-4" />
-                    シナリオの作成
+                    サービスの追加
                 </Button>
             </div>
             <div>
@@ -53,47 +48,37 @@ export function ScenarioList() {
                     <TableCaption></TableCaption>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>id</TableHead>
                             <TableHead>name</TableHead>
-                            <TableHead>start_date</TableHead>
-                            <TableHead>end_date</TableHead>
-                            <TableHead>is_locked</TableHead>
+                            <TableHead>#slug</TableHead>
                             <TableHead>updated_at</TableHead>
-                            <TableHead>updated_by</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {scenarios?.length === 0 && (
+                        {services?.length === 0 && (
                             <TableRow>
                                 <TableCell
-                                    colSpan={7}
+                                    colSpan={3}
                                     className="text-center text-slate-400 py-8"
                                 >
-                                    シナリオデータはありません
+                                    サービスは作成されていません
                                 </TableCell>
                             </TableRow>
                         )}
-                        {scenarios?.map((s: Scenario) => (
+                        {services?.map((s: Service) => (
                             <TableRow key={s.id}>
-                                <TableCell>{s.id}</TableCell>
                                 <TableCell>{s.name}</TableCell>
-                                <TableCell>{s.start_date}</TableCell>
-                                <TableCell>{s.end_date}</TableCell>
-                                <TableCell>
-                                    {s.is_locked ? "✅" : "-"}
-                                </TableCell>
-                                <TableCell>{s.updated_at}</TableCell>
-                                <TableCell>{s.updated_by}</TableCell>
+                                <TableCell>#{s.slug}</TableCell>
+                                <TableCell>#{s.updated_at}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </div>
 
-            <ScenarioFormDialog
+            <ServiceFormDialog
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
-                scenarioToEdit={editingScenario}
+                serviceToEdit={editingService}
             />
         </div>
     );

@@ -65,6 +65,14 @@ export function AppLayout() {
                                 シナリオ設定
                             </Link>
                         </li>
+                        <li>
+                            <Link
+                                to="/services"
+                                className={getLinkClass("/services")}
+                            >
+                                サービス設定
+                            </Link>
+                        </li>
                     </ul>
                 </nav>
                 <main className="flex-1 bg-white overflow-y-auto p-2">
