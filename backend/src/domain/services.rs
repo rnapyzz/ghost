@@ -22,7 +22,7 @@ impl Service {
             return Err(anyhow::anyhow!("Name cannot be empty"));
         }
 
-        let re = Regex::new(r"^[a-z0-9-]+$").unwrap();
+        let re = Regex::new(r"^[a-z0-9-]+$")?;
         if !re.is_match(&slug) {
             return Err(anyhow::anyhow!(
                 "Slug must contain only lowercase letters, numbers, and hyphens"

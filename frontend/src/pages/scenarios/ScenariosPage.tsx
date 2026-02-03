@@ -1,8 +1,8 @@
 import { ScenarioList } from "@/features/scenarios/components/ScenarioList.tsx";
 
-export function ScenarioPage() {
+export function ScenariosPage() {
     return (
-        <div>
+        <div className="py-4">
             <ScenarioList />
         </div>
     );
