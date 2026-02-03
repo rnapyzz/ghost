@@ -12,6 +12,7 @@ import { useState } from "react";
 import type { Scenario } from "@/types";
 import { ScenarioFormDialog } from "@/features/scenarios/components/ScenarioFormDialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Plus } from "lucide-react";
 
 export function ScenarioList() {
     const { data: scenarios, isLoading, isError } = useScenarios();
@@ -37,9 +38,15 @@ export function ScenarioList() {
         );
 
     return (
-        <div>
-            <div className="flex items-center justify-end">
-                <Button onClick={handleCreate}>+ シナリオの作成</Button>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-800">
+                    シナリオ管理
+                </h2>
+                <Button onClick={handleCreate} className="">
+                    <Plus className="h-4 w-4" />
+                    シナリオの作成
+                </Button>
             </div>
             <div>
                 <Table>
@@ -72,7 +79,9 @@ export function ScenarioList() {
                                 <TableCell>{s.name}</TableCell>
                                 <TableCell>{s.start_date}</TableCell>
                                 <TableCell>{s.end_date}</TableCell>
-                                <TableCell>{s.is_locked}</TableCell>
+                                <TableCell>
+                                    {s.is_locked ? "✅" : "-"}
+                                </TableCell>
                                 <TableCell>{s.updated_at}</TableCell>
                                 <TableCell>{s.updated_by}</TableCell>
                             </TableRow>
