@@ -25,6 +25,17 @@ export type PlanNode = {
     updated_by: string;
 };
 
+export type CreatePlanNodeDTO = {
+    scenario_id: string;
+    parent_id?: string;
+    lineage_id?: string;
+    title: string;
+    description?: string;
+    node_type: string;
+    display_order: number;
+    service_id?: string;
+};
+
 export type Scenario = {
     id: string;
     name: string;

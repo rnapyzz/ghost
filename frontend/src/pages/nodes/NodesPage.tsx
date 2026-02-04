@@ -1,9 +1,9 @@
-import { NodeList } from "@/features/nodes/components/NodeList.tsx";
+import { PlanNodeExplorer } from "@/features/nodes/components/PlanNodeExplorer.tsx";
 
 export function NodesPage() {
     return (
         <div className="p-4">
-            <NodeList />
+            <PlanNodeExplorer />
         </div>
     );
 }
