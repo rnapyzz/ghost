@@ -1,6 +1,7 @@
 use uuid::Uuid;
 
-use crate::domain::plan_nodes::{NodeType, PlanNode, PlanNodeRepository};
+use crate::domain::plan_nodes::{NodeType, PlanNode, PlanNodeRepository, UpdatePlanNodeParams};
+use crate::presentation::dtos::UpdatePlanNodeRequest;
 
 pub struct PlanNodeService<R: PlanNodeRepository> {
     repository: R,
@@ -34,7 +35,7 @@ impl<R: PlanNodeRepository> PlanNodeService<R> {
             // シナリオの一致確認
             if parent.scenario_id != scenario_id {
                 return Err(anyhow::anyhow!(
-                    "Parent node belongs to a diffrent scenario"
+                    "Parent node belongs to a different scenario"
                 ));
             }
 
@@ -72,5 +73,21 @@ impl<R: PlanNodeRepository> PlanNodeService<R> {
 
     pub async fn list_by_scenario(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlanNode>> {
         self.repository.find_by_scenario_id(scenario_id).await
+    }
+
+    pub async fn update(
+        &self,
+        id: Uuid,
+        req: UpdatePlanNodeRequest,
+        updated_by: Uuid,
+    ) -> anyhow::Result<PlanNode> {
+        // DTO から Domain Paramsへ変換
+        let params: UpdatePlanNodeParams = req.into();
+
+        self.repository.update(id, params, updated_by).await
+    }
+
+    pub async fn delete(&self, id: Uuid) -> anyhow::Result<()> {
+        self.repository.delete(id).await
     }
 }
