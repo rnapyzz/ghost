@@ -9,40 +9,58 @@ import { getNodeIcon } from "@/features/nodes/components/NodeIcon.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PlanNodeFormDialog } from "@/features/nodes/components/PlanNodeFormDialog.tsx";
+import * as React from "react";
+import { NodeDetailPanel } from "@/features/nodes/components/NodeDetailPanel.tsx";
 
 const TreeNode = ({
     node,
     level = 0,
     onCreateChild,
+    selectedId,
+    onSelect,
 }: {
     node: PlanNodeWithChildren;
     level?: number;
     onCreateChild: (node: PlanNodeWithChildren) => void;
+    selectedId?: string;
+    onSelect: (node: PlanNodeWithChildren) => void;
 }) => {
     const [isOpen, setIsOpen] = useState(false);
-
     const hasChildren = node.children && node.children.length > 0;
-
     const isContainer = ["Initiative", "Project", "SubProject"].includes(
         node.node_type,
     );
 
-    const handleToggle = () => {
+    const handleToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
         if (isContainer || hasChildren) {
             setIsOpen(!isOpen);
         }
     };
 
+    const handleRowClick = () => {
+        onSelect(node);
+        if (isContainer) setIsOpen(!isOpen);
+    };
+
+    const isSelected = selectedId === node.id;
+
     return (
         <div>
             <div
                 className={cn(
-                    `group flex items-center py-1 px-2 hover:bg-slate-100 cursor-pointer select-none transition-colors ${node.node_type === "Initiative" ? "bg-blue-50" : ""}`,
+                    "group flex items-center py-1 px-2 cursor-pointer select-none selected-none transition-colors",
+                    isSelected
+                        ? "bg-blue-100 text-blue-900"
+                        : "hover:bg-slate-100",
                 )}
                 style={{ paddingLeft: `${level * 16 + 8}px` }}
-                onClick={handleToggle}
+                onClick={handleRowClick}
             >
-                <span className="w-4 h-4 mr-1 flex items-center justify-center font-semibold bg-slate-50 rounded-full text-slate-500">
+                <span
+                    className="w-4 h-4 mr-1 flex items-center justify-center font-semibold bg-slate-50 rounded-full text-slate-500"
+                    onClick={handleToggle}
+                >
                     {(hasChildren || isContainer) &&
                         (isOpen ? (
                             <ChevronDown className="w-3 h-3" />
@@ -87,6 +105,8 @@ const TreeNode = ({
                             node={child}
                             level={level + 1}
                             onCreateChild={onCreateChild}
+                            selectedId={selectedId}
+                            onSelect={onSelect}
                         />
                     ))}
                 </div>
@@ -109,6 +129,8 @@ export function PlanNodeExplorer() {
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [targetParent, setTargetParent] =
+        useState<PlanNodeWithChildren | null>(null);
+    const [selectedNode, setSelectedNode] =
         useState<PlanNodeWithChildren | null>(null);
 
     const currentScenarioId = "00000000-0000-0000-0000-000000000000";
@@ -148,15 +170,28 @@ export function PlanNodeExplorer() {
                 </Button>
             </div>
 
-            {/* node tree */}
-            {treeNodes.length === 0 && <div>No Nodes</div>}
-            {treeNodes.map((node) => (
-                <TreeNode
-                    key={node.id}
-                    node={node}
-                    onCreateChild={handleCreateChild}
-                />
-            ))}
+            {/* body */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* left: explorer */}
+                <div className="w-[240px] border-r overflow-y-auto py-2">
+                    {/* node tree */}
+                    {treeNodes.length === 0 && <div>No Nodes</div>}
+                    {treeNodes.map((node) => (
+                        <TreeNode
+                            key={node.id}
+                            node={node}
+                            onCreateChild={handleCreateChild}
+                            selectedId={selectedNode?.id}
+                            onSelect={setSelectedNode}
+                        />
+                    ))}
+                </div>
+
+                {/* right: detail */}
+                <div className="flex-1 overflow-y-auto bg-slate-50/30">
+                    <NodeDetailPanel node={selectedNode} />
+                </div>
+            </div>
 
             {/* ここに dialog を 設置*/}
             <PlanNodeFormDialog
