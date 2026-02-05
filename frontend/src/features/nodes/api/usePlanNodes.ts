@@ -26,4 +26,6 @@ export const usePlanNodeMutations = () => {
             queryClient.invalidateQueries({ queryKey: planNodesKeys.all });
         },
     });
+
+    return { createPlanNode };
 };

@@ -1,10 +1,10 @@
 import {
+    Box,
+    Compass,
     FileText,
     Folder,
     FolderOpen,
-    Hammer,
-    Scale,
-    Target,
+    PackageOpen,
 } from "lucide-react";
 
 export const getNodeIcon = (nodeType: string, isOpen: boolean) => {
@@ -12,7 +12,7 @@ export const getNodeIcon = (nodeType: string, isOpen: boolean) => {
 
     switch (nodeType) {
         case "Initiative":
-            return <Target {...props} className="w-4 h-4 text-blue-500" />;
+            return <Compass {...props} className="w-4 h-4 text-blue-500" />;
         case "Project":
             return isOpen ? (
                 <FolderOpen {...props} className="w-4 h-4 text-blue-500" />
@@ -26,9 +26,11 @@ export const getNodeIcon = (nodeType: string, isOpen: boolean) => {
                 <Folder {...props} className="w-4 h-4 text-blue-500" />
             );
         case "Job":
-            return <Hammer {...props} className="w-4 h-4 text-blue-500" />;
+            return <Box {...props} className="w-4 h-4 text-orange-500" />;
         case "AdjustmentBuffer":
-            return <Scale {...props} className="w-4- h-4 text-orange-400" />;
+            return (
+                <PackageOpen {...props} className="w-4- h-4 text-slate-300" />
+            );
         default:
             return <FileText {...props} />;
     }

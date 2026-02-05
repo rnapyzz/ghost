@@ -12,7 +12,7 @@ import { useState } from "react";
 import type { Service } from "@/types";
 import { Button } from "@/components/ui/button.tsx";
 import { Plus } from "lucide-react";
-import { ServiceFormDialog } from "@/features/services/api/ServiceFormDialog.tsx";
+import { ServiceFormDialog } from "@/features/services/components/ServiceFormDialog.tsx";
 
 export function ServiceList() {
     const { data: services, isLoading, isError } = useServices();
