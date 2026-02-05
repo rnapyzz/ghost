@@ -96,6 +96,13 @@ pub struct CreatePlanNodeRequest {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct UpdatePlanNodeRequest {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub display_order: Option<i32>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct ListPlanNodesQuery {
     pub scenario_id: Option<Uuid>,
 }
