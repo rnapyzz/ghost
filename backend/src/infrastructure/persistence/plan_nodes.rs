@@ -223,7 +223,7 @@ impl PlanNodeRepository for PlanNodeRepositoryImpl {
 
         // 紐づくPlEntryが存在するかどうかチェック
         let entry_count: i64 =
-            sqlx::query_scalar("SELECT count(*) FROM pl_entries WHERE plan_node_id = $1")
+            sqlx::query_scalar("SELECT count(*) FROM pl_entries WHERE node_id = $1")
                 .bind(id)
                 .fetch_one(&self.pool)
                 .await?;
