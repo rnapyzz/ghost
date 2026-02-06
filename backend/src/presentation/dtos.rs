@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
+use crate::domain::plan_nodes::UpdatePlanNodeParams;
 use crate::domain::{
     account_items::AccountType, pl_entries::EntryCategory, plan_nodes::NodeType, user::UserRole,
 };
@@ -93,6 +94,23 @@ pub struct CreatePlanNodeRequest {
 
     // 実体タイプ（Job, Buffer）の場合のみ指定
     pub service_id: Option<Uuid>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdatePlanNodeRequest {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub display_order: Option<i32>,
+}
+
+impl From<UpdatePlanNodeRequest> for UpdatePlanNodeParams {
+    fn from(req: UpdatePlanNodeRequest) -> Self {
+        Self {
+            title: req.title,
+            description: req.description,
+            display_order: req.display_order,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]

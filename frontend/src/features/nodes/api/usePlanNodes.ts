@@ -27,5 +27,25 @@ export const usePlanNodeMutations = () => {
         },
     });
 
-    return { createPlanNode };
+    const updatePlanNode = useMutation({
+        mutationFn: ({
+            id,
+            data,
+        }: {
+            id: string;
+            data: Partial<CreatePlanNodeDTO>;
+        }) => api.patch(`/plan-nodes/${id}`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: planNodesKeys.all });
+        },
+    });
+
+    const deletePlanNode = useMutation({
+        mutationFn: (id: string) => api.delete(`/plan-nodes/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: planNodesKeys.all });
+        },
+    });
+
+    return { createPlanNode, updatePlanNode, deletePlanNode };
 };

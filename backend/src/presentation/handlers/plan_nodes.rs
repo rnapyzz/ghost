@@ -1,11 +1,14 @@
+use axum::extract::Path;
 use axum::{
     Json,
     extract::{Query, State},
     http::StatusCode,
     response::IntoResponse,
 };
+use uuid::Uuid;
 use validator::Validate;
 
+use crate::presentation::dtos::UpdatePlanNodeRequest;
 use crate::{
     application::services::plan_nodes::PlanNodeService,
     infrastructure::persistence::plan_nodes::PlanNodeRepositoryImpl,
@@ -75,5 +78,52 @@ pub async fn list(
     match result {
         Ok(nodes) => Ok((StatusCode::OK, Json(nodes))),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
+}
+
+pub async fn update(
+    State(state): State<AppState>,
+    auth_user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(req): Json<UpdatePlanNodeRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let repo = PlanNodeRepositoryImpl::new(state.pool);
+    let service = PlanNodeService::new(repo);
+
+    match service.update(id, req, auth_user.id).await {
+        Ok(node) => Ok(Json(node)),
+        Err(e) => {
+            let err_msg = e.to_string();
+            if err_msg.contains("not found") {
+                Err((StatusCode::NOT_FOUND, err_msg))
+            } else {
+                tracing::error!("Plan Node Update Error: {:?}", e);
+                Err((StatusCode::INTERNAL_SERVER_ERROR, err_msg))
+            }
+        }
+    }
+}
+
+pub async fn delete(
+    State(state): State<AppState>,
+    _auth_user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let repo = PlanNodeRepositoryImpl::new(state.pool);
+    let service = PlanNodeService::new(repo);
+
+    match service.delete(id).await {
+        Ok(_) => Ok(StatusCode::NO_CONTENT),
+        Err(e) => {
+            let err_msg = e.to_string();
+            if err_msg.contains("not found") {
+                Err((StatusCode::NOT_FOUND, err_msg))
+            } else if err_msg.contains("削除できません") {
+                Err((StatusCode::BAD_REQUEST, err_msg))
+            } else {
+                tracing::error!("Plan Node Delete Error: {:?}", e);
+                Err((StatusCode::INTERNAL_SERVER_ERROR, err_msg))
+            }
+        }
     }
 }

@@ -1,7 +1,7 @@
-use sqlx::PgPool;
+use sqlx::{PgPool, QueryBuilder};
 use uuid::Uuid;
 
-use crate::domain::plan_nodes::{PlanNode, PlanNodeRepository};
+use crate::domain::plan_nodes::{PlanNode, PlanNodeRepository, UpdatePlanNodeParams};
 
 #[derive(Debug, Clone)]
 pub struct PlanNodeRepositoryImpl {
@@ -170,5 +170,79 @@ impl PlanNodeRepository for PlanNodeRepositoryImpl {
         .await?;
 
         Ok(recs)
+    }
+
+    async fn update(
+        &self,
+        id: Uuid,
+        params: UpdatePlanNodeParams,
+        updated_by: Uuid,
+    ) -> anyhow::Result<PlanNode> {
+        let mut builder =
+            QueryBuilder::new("UPDATE plan_nodes SET updated_at = NOW(), updated_by = ");
+        builder.push_bind(updated_by);
+
+        if let Some(title) = params.title {
+            builder.push(", title = ");
+            builder.push_bind(title);
+        }
+
+        if let Some(description) = params.description {
+            builder.push(", description = ");
+            builder.push_bind(description);
+        }
+
+        if let Some(display_order) = params.display_order {
+            builder.push(", display_order = ");
+            builder.push_bind(display_order);
+        }
+
+        builder.push(" WHERE id = ");
+        builder.push_bind(id);
+        builder.push(" RETURNING *");
+
+        let node = builder
+            .build_query_as::<PlanNode>()
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(node)
+    }
+
+    async fn delete(&self, id: Uuid) -> anyhow::Result<()> {
+        // 子ノードが存在するかどうかチェック
+        let child_count: i64 =
+            sqlx::query_scalar("SELECT count(*) FROM plan_nodes WHERE parent_id = $1")
+                .bind(id)
+                .fetch_one(&self.pool)
+                .await?;
+
+        if child_count > 0 {
+            return Err(anyhow::anyhow!("子ノードが存在するため削除できません。"));
+        }
+
+        // 紐づくPlEntryが存在するかどうかチェック
+        let entry_count: i64 =
+            sqlx::query_scalar("SELECT count(*) FROM pl_entries WHERE node_id = $1")
+                .bind(id)
+                .fetch_one(&self.pool)
+                .await?;
+
+        if entry_count > 0 {
+            return Err(anyhow::anyhow!(
+                "数値データが紐づいているため削除できません。"
+            ));
+        }
+
+        let result = sqlx::query("DELETE FROM plan_nodes WHERE id = $1")
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(anyhow::anyhow!("Plan Node not found."));
+        }
+
+        Ok(())
     }
 }

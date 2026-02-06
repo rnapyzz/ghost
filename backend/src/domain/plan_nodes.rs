@@ -1,3 +1,4 @@
+use crate::presentation::dtos::UpdatePlanNodeRequest;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -126,10 +127,23 @@ impl PlanNode {
     }
 }
 
+pub struct UpdatePlanNodeParams {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub display_order: Option<i32>,
+}
+
 #[async_trait::async_trait]
 pub trait PlanNodeRepository: Send + Sync {
     async fn create(&self, node: &PlanNode) -> anyhow::Result<PlanNode>;
     async fn find_recent(&self, limit: i64) -> anyhow::Result<Vec<PlanNode>>;
     async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<PlanNode>>;
     async fn find_by_scenario_id(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlanNode>>;
+    async fn update(
+        &self,
+        id: Uuid,
+        node: UpdatePlanNodeParams,
+        updated_by: Uuid,
+    ) -> anyhow::Result<PlanNode>;
+    async fn delete(&self, id: Uuid) -> anyhow::Result<()>;
 }

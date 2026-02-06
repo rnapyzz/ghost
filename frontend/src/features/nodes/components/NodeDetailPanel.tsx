@@ -1,11 +1,42 @@
 import type { PlanNodeWithChildren } from "@/features/nodes/utils/tree.ts";
-import { Badge, Calendar, Tag, User } from "lucide-react";
+import { Calendar, Pencil, Tag, Trash2, User } from "lucide-react";
+import { usePlanNodeMutations } from "@/features/nodes/api/usePlanNodes.ts";
+import { useState } from "react";
+import { Button } from "@/components/ui/button.tsx";
+import { PlanNodeFormDialog } from "@/features/nodes/components/PlanNodeFormDialog.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog.tsx";
 
 type Props = {
     node: PlanNodeWithChildren | null;
+    onDeleted?: () => void;
 };
 
-export function NodeDetailPanel({ node }: Props) {
+export function NodeDetailPanel({ node, onDeleted }: Props) {
+    const { deletePlanNode } = usePlanNodeMutations();
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+
+    const executeDelete = async () => {
+        if (!node) return;
+        try {
+            await deletePlanNode.mutateAsync(node.id);
+            onDeleted?.();
+            setIsDeleteAlertOpen(false);
+        } catch (error: any) {
+            const message = error.response?.data || "削除に失敗しました";
+            alert(message);
+        }
+    };
+
     if (!node) {
         return (
             <div className="h-full flex items-center justify-center text-slate-400 bg-slate-50/50">
@@ -18,18 +49,28 @@ export function NodeDetailPanel({ node }: Props) {
     return (
         <div className="h-full bg-white p-6 overflow-y-auto">
             {/* header */}
-            <div className="mb-6 ">
-                <div className="flex items-center gap-2 mb-2">
-                    <Badge className="text-xs font-normal text-slate-500">
-                        {node.node_type}
-                    </Badge>
-                    <span className="text-xs text-slate-400">
-                        ID: {node.id.slice(0, 18)}...
-                    </span>
-                </div>
-                <span className="text-xl font-semibold text-slate-900">
+            <div className="mb-6 flex justify-between items-start">
+                <h2 className="text-xl font-semibold text-slate-900 leading-tight">
                     {node.title}
-                </span>
+                </h2>
+
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setIsEditOpen(true)}
+                    >
+                        <Pencil className="w-4- h-4 text-slate-600" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                        onClick={() => setIsDeleteAlertOpen(true)}
+                    >
+                        <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-600" />
+                    </Button>
+                </div>
             </div>
 
             {/* meta data*/}
@@ -64,6 +105,54 @@ export function NodeDetailPanel({ node }: Props) {
                     {node.description || "説明は設定されていません。"}
                 </div>
             </div>
+
+            {/* 編集用ダイアログ */}
+            <PlanNodeFormDialog
+                open={isEditOpen}
+                onOpenChange={setIsEditOpen}
+                scenarioId={node.scenario_id}
+                nodeToEdit={node}
+            />
+
+            {/* 削除用ダイアログ */}
+            <AlertDialog
+                open={isDeleteAlertOpen}
+                onOpenChange={setIsDeleteAlertOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            本当に削除しますか？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            "
+                            <span className="text-slate-800 font-semibold">
+                                {node.title}
+                            </span>
+                            " ({node.node_type}ノード)
+                            を削除しようとしています。
+                            <br />
+                            子ノードや数値データが紐づいている場合、削除は失敗します。
+                            <br />
+                            <span className="text-red-600">
+                                この操作は取り消せません。
+                            </span>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                executeDelete();
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            削除する
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

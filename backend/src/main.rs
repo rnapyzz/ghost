@@ -1,3 +1,6 @@
+use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
+use axum::http::{HeaderValue, Method};
+use axum::routing::{delete, patch};
 use axum::{
     Router,
     routing::{get, post},
@@ -5,8 +8,6 @@ use axum::{
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
-use axum::http::{HeaderValue, Method};
-use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -44,9 +45,15 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Migration success");
 
     let cors = CorsLayer::new()
-        .allow_origin("http://localhost:5173".parse::<HeaderValue>()?).allow_methods(
-        [Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE]
-    ).allow_headers([CONTENT_TYPE, AUTHORIZATION]);
+        .allow_origin("http://localhost:5173".parse::<HeaderValue>()?)
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::PATCH,
+            Method::DELETE,
+        ])
+        .allow_headers([CONTENT_TYPE, AUTHORIZATION]);
 
     let state = AppState::new(pool);
     let app = Router::new()
@@ -62,6 +69,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/services", post(services::create))
         .route("/plan-nodes", get(plan_nodes::list))
         .route("/plan-nodes", post(plan_nodes::create))
+        .route("/plan-nodes/{id}", patch(plan_nodes::update))
+        .route("/plan-nodes/{id}", delete(plan_nodes::delete))
         .route("/pl-entries", get(pl_entries::list))
         .route("/pl-entries", post(pl_entries::save))
         .route("/pl-entries/bulk", post(pl_entries::bulk_save))
