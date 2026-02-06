@@ -10,7 +10,8 @@ pub struct Scenario {
 
     pub start_date: NaiveDate,
     pub end_date: NaiveDate,
-    pub is_locked: bool, // シナリオの締めフラグ
+    pub is_locked: bool,  // シナリオの締めフラグ
+    pub is_current: bool, // 現在作成中のシナリオかどうかのフラグ
 
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -46,6 +47,7 @@ impl Scenario {
             start_date,
             end_date,
             is_locked: false,
+            is_current: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
             created_by: user_id,
@@ -60,4 +62,5 @@ impl Scenario {
 pub trait ScenarioRepository {
     async fn create(&self, scenario: &Scenario) -> anyhow::Result<Scenario>;
     async fn find_all(&self) -> anyhow::Result<Vec<Scenario>>;
+    async fn set_current(&self, id: Uuid) -> anyhow::Result<()>;
 }

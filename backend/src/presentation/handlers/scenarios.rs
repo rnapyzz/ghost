@@ -1,4 +1,6 @@
+use axum::extract::Path;
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
@@ -53,5 +55,21 @@ pub async fn list(
     match service.list_all().await {
         Ok(res) => Ok((StatusCode::OK, Json(res))),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
+}
+
+pub async fn activate(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let repo = ScenarioRepositoryImpl::new(state.pool);
+    let service = ScenarioService::new(repo);
+
+    match service.activate(id).await {
+        Ok(_) => Ok(StatusCode::NO_CONTENT),
+        Err(e) => {
+            tracing::error!("Error activating scenario: {:?}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }

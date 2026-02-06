@@ -30,4 +30,8 @@ impl<R: ScenarioRepository> ScenarioService<R> {
     pub async fn list_all(&self) -> anyhow::Result<Vec<Scenario>> {
         self.repository.find_all().await
     }
+
+    pub async fn activate(&self, id: Uuid) -> anyhow::Result<()> {
+        self.repository.set_current(id).await
+    }
 }
