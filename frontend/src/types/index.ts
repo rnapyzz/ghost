@@ -4,11 +4,6 @@ export type User = {
     email: string;
 };
 
-export type ApiResponse<T> = {
-    data: T;
-    message?: string;
-};
-
 export type PlanNode = {
     id: string;
     scenario_id: string;
@@ -43,6 +38,7 @@ export type Scenario = {
     start_date: string; // YYYY-MM-DD
     end_date: string; // YYYY-MM-DD
     is_locked: boolean;
+    is_current: boolean;
     created_at: string;
     updated_at: string;
     created_by: string;
