@@ -31,7 +31,7 @@ export const useScenarioMutations = () => {
         },
     });
 
-    const activeScenario = useMutation({
+    const activateScenario = useMutation({
         mutationFn: (id: string) => api.post(`/scenarios/${id}/activate`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["scenarios"] });
@@ -54,5 +54,5 @@ export const useScenarioMutations = () => {
         },
     });
 
-    return { createScenario, activeScenario, updateScenario, deleteScenario };
+    return { createScenario, activateScenario, updateScenario, deleteScenario };
 };
