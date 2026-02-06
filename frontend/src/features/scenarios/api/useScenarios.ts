@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api.ts";
-import type { CreateScenarioDTO, UpdateScenarioDTO } from "@/types";
+import type { CreateScenarioDTO, Scenario, UpdateScenarioDTO } from "@/types";
 
 export const scenarioKeys = {
     all: ["scenarios"] as const,
@@ -16,6 +16,11 @@ export const useScenarios = () => {
     });
 };
 
+export const useCurrentScenario = () => {
+    const { data: scenarios } = useScenarios();
+    return scenarios?.find((s: Scenario) => s.is_current) || null;
+};
+
 export const useScenarioMutations = () => {
     const queryClient = useQueryClient();
 
@@ -23,6 +28,14 @@ export const useScenarioMutations = () => {
         mutationFn: (data: CreateScenarioDTO) => api.post("/scenarios", data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: scenarioKeys.all });
+        },
+    });
+
+    const activeScenario = useMutation({
+        mutationFn: (id: string) => api.post(`/scenarios/${id}/activate`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["scenarios"] });
+            queryClient.invalidateQueries({ queryKey: ["planNodes"] });
         },
     });
 
@@ -41,5 +54,5 @@ export const useScenarioMutations = () => {
         },
     });
 
-    return { createScenario, updateScenario, deleteScenario };
+    return { createScenario, activeScenario, updateScenario, deleteScenario };
 };

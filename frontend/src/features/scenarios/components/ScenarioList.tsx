@@ -53,6 +53,7 @@ export function ScenarioList() {
                     <TableCaption></TableCaption>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>is_current</TableHead>
                             <TableHead>id</TableHead>
                             <TableHead>name</TableHead>
                             <TableHead>start_date</TableHead>
@@ -75,6 +76,9 @@ export function ScenarioList() {
                         )}
                         {scenarios?.map((s: Scenario) => (
                             <TableRow key={s.id}>
+                                <TableCell>
+                                    {s.is_current ? "✅" : ""}
+                                </TableCell>
                                 <TableCell>{s.id}</TableCell>
                                 <TableCell>{s.name}</TableCell>
                                 <TableCell>{s.start_date}</TableCell>

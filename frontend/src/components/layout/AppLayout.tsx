@@ -10,9 +10,12 @@ import {
     Network,
     Settings,
 } from "lucide-react";
+import { useCurrentScenario } from "@/features/scenarios/api/useScenarios.ts";
 
 export function AppLayout() {
     const location = useLocation();
+
+    const currentScenario = useCurrentScenario();
 
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -117,7 +120,22 @@ export function AppLayout() {
                                     />
                                     {!isCollapsed && (
                                         <span className="font-medium text-sm overflow-hidden whitespace-nowrap">
-                                            シナリオ設定
+                                            シナリオ管理
+                                        </span>
+                                    )}
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    to="/settings/scenario"
+                                    className={getLinkClass(
+                                        "/settings/scenario",
+                                    )}
+                                >
+                                    <Settings size={20} className="shrink-0" />
+                                    {!isCollapsed && (
+                                        <span className="font-medium text-sm overflow-hidden whitespace-nowrap">
+                                            現在シナリオ設定
                                         </span>
                                     )}
                                 </Link>
@@ -138,7 +156,36 @@ export function AppLayout() {
                         </ul>
                     </div>
 
-                    <div className="p-3 border-t border-slate-100"></div>
+                    <div className="p-3 border-t border-slate-100">
+                        {!isCollapsed && currentScenario && (
+                            <div className="px-3 mb-4 animate-in fade-in duration-300">
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 px-1">
+                                    Current Period
+                                </div>
+                                <div className="flex items-center gap-2 p-2 bg-blue-50/50 border border-blue-200 rounded-md">
+                                    <div className="relative flex shirink-0 h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex f-hull w-full rounded-full bg-blue-500 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                    </div>
+                                    <span
+                                        className="text-xs font-medium
+                                     text-slate-700 truncate"
+                                    >
+                                        {currentScenario.name}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {isCollapsed && currentScenario && (
+                            <div className="flex justify-center mb-4 px-2">
+                                <div
+                                    className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"
+                                    title={`Current: ${currentScenario.name}`}
+                                ></div>
+                            </div>
+                        )}
+                    </div>
                 </nav>
 
                 {/* main content */}
