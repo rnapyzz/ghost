@@ -62,5 +62,6 @@ impl Scenario {
 pub trait ScenarioRepository {
     async fn create(&self, scenario: &Scenario) -> anyhow::Result<Scenario>;
     async fn find_all(&self) -> anyhow::Result<Vec<Scenario>>;
+    async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<Scenario>>;
     async fn set_current(&self, id: Uuid) -> anyhow::Result<()>;
 }

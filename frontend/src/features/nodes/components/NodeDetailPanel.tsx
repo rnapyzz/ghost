@@ -14,6 +14,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
+import { useCurrentScenario } from "@/features/scenarios/api/useScenarios.ts";
 
 type Props = {
     node: PlanNodeWithChildren | null;
@@ -24,6 +25,10 @@ export function NodeDetailPanel({ node, onDeleted }: Props) {
     const { deletePlanNode } = usePlanNodeMutations();
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+
+    const currentScenario = useCurrentScenario();
+    const isReadOnly =
+        node && currentScenario && node.scenario_id !== currentScenario;
 
     const executeDelete = async () => {
         if (!node) return;
@@ -54,23 +59,30 @@ export function NodeDetailPanel({ node, onDeleted }: Props) {
                     {node.title}
                 </h2>
 
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setIsEditOpen(true)}
-                    >
-                        <Pencil className="w-4- h-4 text-slate-600" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                        onClick={() => setIsDeleteAlertOpen(true)}
-                    >
-                        <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-600" />
-                    </Button>
-                </div>
+                {!isReadOnly && (
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setIsEditOpen(true)}
+                        >
+                            <Pencil className="w-4- h-4 text-slate-600" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                            onClick={() => setIsDeleteAlertOpen(true)}
+                        >
+                            <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-600" />
+                        </Button>
+                    </div>
+                )}
+                {isReadOnly && (
+                    <div className="px-2 py-1 text-xs font-medium text-slate-500 bg-slate-100 rounded border border-slate-200">
+                        Read Only
+                    </div>
+                )}
             </div>
 
             {/* meta data*/}

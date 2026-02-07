@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils.ts";
 import { PlanNodeFormDialog } from "@/features/nodes/components/PlanNodeFormDialog.tsx";
 import * as React from "react";
 import { NodeDetailPanel } from "@/features/nodes/components/NodeDetailPanel.tsx";
+import { useCurrentScenario } from "@/features/scenarios/api/useScenarios.ts";
 
 const TreeNode = ({
     node,
@@ -133,7 +134,8 @@ export function PlanNodeExplorer() {
     const [selectedNode, setSelectedNode] =
         useState<PlanNodeWithChildren | null>(null);
 
-    const currentScenarioId = "00000000-0000-0000-0000-000000000000";
+    const currentScenario = useCurrentScenario();
+    const currentScenarioId = currentScenario.id;
 
     const handleCreateRoot = () => {
         setTargetParent(null);

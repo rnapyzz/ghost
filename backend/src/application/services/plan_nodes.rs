@@ -1,15 +1,40 @@
 use uuid::Uuid;
 
 use crate::domain::plan_nodes::{NodeType, PlanNode, PlanNodeRepository, UpdatePlanNodeParams};
+use crate::domain::scenarios::ScenarioRepository;
 use crate::presentation::dtos::UpdatePlanNodeRequest;
 
-pub struct PlanNodeService<R: PlanNodeRepository> {
-    repository: R,
+pub struct PlanNodeService<P, S> {
+    plan_node_repo: P,
+    scenario_repo: S,
 }
 
-impl<R: PlanNodeRepository> PlanNodeService<R> {
-    pub fn new(repository: R) -> Self {
-        Self { repository }
+impl<P, S> PlanNodeService<P, S>
+where
+    P: PlanNodeRepository,
+    S: ScenarioRepository,
+{
+    pub fn new(plan_node_repo: P, scenario_repo: S) -> Self {
+        Self {
+            plan_node_repo,
+            scenario_repo,
+        }
+    }
+
+    async fn ensure_scenario_is_writable(&self, scenario_id: Uuid) -> anyhow::Result<()> {
+        let scenario = self
+            .scenario_repo
+            .find_by_id(scenario_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Scenario not found"))?;
+
+        if !scenario.is_current {
+            return Err(anyhow::anyhow!(
+                "作成中のシナリオ以外は編集できません（Read-Only）"
+            ));
+        }
+
+        Ok(())
     }
 
     #[allow(clippy::too_man_arguments)]
@@ -24,10 +49,12 @@ impl<R: PlanNodeRepository> PlanNodeService<R> {
         service_id: Option<Uuid>,
         user_id: Uuid,
     ) -> anyhow::Result<PlanNode> {
+        self.ensure_scenario_is_writable(scenario_id).await?;
+
         // 親Nodeがある場合のバリデーション
         if let Some(pid) = parent_id {
             let parent = self
-                .repository
+                .plan_node_repo
                 .find_by_id(pid)
                 .await?
                 .ok_or_else(|| anyhow::anyhow!("Parent node not found"))?;
@@ -62,17 +89,17 @@ impl<R: PlanNodeRepository> PlanNodeService<R> {
             user_id,
         )?;
 
-        let created = self.repository.create(&new_node).await?;
+        let created = self.plan_node_repo.create(&new_node).await?;
 
         Ok(created)
     }
 
     pub async fn list_recent(&self, limit: i64) -> anyhow::Result<Vec<PlanNode>> {
-        self.repository.find_recent(limit).await
+        self.plan_node_repo.find_recent(limit).await
     }
 
     pub async fn list_by_scenario(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlanNode>> {
-        self.repository.find_by_scenario_id(scenario_id).await
+        self.plan_node_repo.find_by_scenario_id(scenario_id).await
     }
 
     pub async fn update(
@@ -81,13 +108,31 @@ impl<R: PlanNodeRepository> PlanNodeService<R> {
         req: UpdatePlanNodeRequest,
         updated_by: Uuid,
     ) -> anyhow::Result<PlanNode> {
+        let current_node = self
+            .plan_node_repo
+            .find_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("PlanNode not found"))?;
+
+        self.ensure_scenario_is_writable(current_node.scenario_id)
+            .await?;
+
         // DTO から Domain Paramsへ変換
         let params: UpdatePlanNodeParams = req.into();
 
-        self.repository.update(id, params, updated_by).await
+        self.plan_node_repo.update(id, params, updated_by).await
     }
 
     pub async fn delete(&self, id: Uuid) -> anyhow::Result<()> {
-        self.repository.delete(id).await
+        let current_node = self
+            .plan_node_repo
+            .find_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("PlanNode not found"))?;
+
+        self.ensure_scenario_is_writable(current_node.scenario_id)
+            .await?;
+
+        self.plan_node_repo.delete(id).await
     }
 }
