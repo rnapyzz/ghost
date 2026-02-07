@@ -71,6 +71,14 @@ impl ScenarioRepository for ScenarioRepositoryImpl {
         Ok(recs)
     }
 
+    async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<Scenario>> {
+        let rec = sqlx::query_as!(Scenario, "SELECT * FROM scenarios WHERE id = $1", id)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        Ok(rec)
+    }
+
     async fn set_current(&self, id: Uuid) -> anyhow::Result<()> {
         let mut tx = self.pool.begin().await?;
 

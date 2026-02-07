@@ -8,6 +8,7 @@ use axum::{
 use uuid::Uuid;
 use validator::Validate;
 
+use crate::infrastructure::persistence::scenarios::ScenarioRepositoryImpl;
 use crate::presentation::dtos::UpdatePlanNodeRequest;
 use crate::{
     application::services::plan_nodes::PlanNodeService,
@@ -28,8 +29,9 @@ pub async fn create(
         return Err((StatusCode::BAD_REQUEST, format!("Validation error: {}", e)));
     }
 
-    let repo = PlanNodeRepositoryImpl::new(state.pool);
-    let service = PlanNodeService::new(repo);
+    let plan_node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+    let service = PlanNodeService::new(plan_node_repo, scenario_repo);
 
     match service
         .create(
@@ -67,8 +69,9 @@ pub async fn list(
     _auth_user: AuthUser,
     Query(query): Query<ListPlanNodesQuery>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let repo = PlanNodeRepositoryImpl::new(state.pool);
-    let service = PlanNodeService::new(repo);
+    let plan_node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+    let service = PlanNodeService::new(plan_node_repo, scenario_repo);
 
     let result = match query.scenario_id {
         Some(id) => service.list_by_scenario(id).await,
@@ -87,8 +90,9 @@ pub async fn update(
     Path(id): Path<Uuid>,
     Json(req): Json<UpdatePlanNodeRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let repo = PlanNodeRepositoryImpl::new(state.pool);
-    let service = PlanNodeService::new(repo);
+    let plan_node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+    let service = PlanNodeService::new(plan_node_repo, scenario_repo);
 
     match service.update(id, req, auth_user.id).await {
         Ok(node) => Ok(Json(node)),
@@ -96,6 +100,8 @@ pub async fn update(
             let err_msg = e.to_string();
             if err_msg.contains("not found") {
                 Err((StatusCode::NOT_FOUND, err_msg))
+            } else if err_msg.contains("Read-Only") {
+                Err((StatusCode::FORBIDDEN, err_msg))
             } else {
                 tracing::error!("Plan Node Update Error: {:?}", e);
                 Err((StatusCode::INTERNAL_SERVER_ERROR, err_msg))
@@ -109,8 +115,9 @@ pub async fn delete(
     _auth_user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let repo = PlanNodeRepositoryImpl::new(state.pool);
-    let service = PlanNodeService::new(repo);
+    let plan_node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+    let service = PlanNodeService::new(plan_node_repo, scenario_repo);
 
     match service.delete(id).await {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
@@ -120,6 +127,8 @@ pub async fn delete(
                 Err((StatusCode::NOT_FOUND, err_msg))
             } else if err_msg.contains("削除できません") {
                 Err((StatusCode::BAD_REQUEST, err_msg))
+            } else if err_msg.contains("Read-Only") {
+                Err((StatusCode::FORBIDDEN, err_msg))
             } else {
                 tracing::error!("Plan Node Delete Error: {:?}", e);
                 Err((StatusCode::INTERNAL_SERVER_ERROR, err_msg))
