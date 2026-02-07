@@ -4,7 +4,7 @@ import {
     type PlanNodeWithChildren,
 } from "@/features/nodes/utils/tree.ts";
 import { ChevronDown, ChevronsRight, Plus } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { getNodeIcon } from "@/features/nodes/components/NodeIcon.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -125,17 +125,21 @@ const TreeNode = ({
     );
 };
 
-export function PlanNodeExplorer() {
-    const { data: flatNodes, isLoading, isError } = usePlanNodes();
+export function PlanNodeExplorer({ scenarioId }: { scenarioId?: string }) {
+    const currentScenario = useCurrentScenario();
+    const activeScenarioId = scenarioId || currentScenario?.id;
+
+    const {
+        data: flatNodes,
+        isLoading,
+        isError,
+    } = usePlanNodes(activeScenarioId);
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [targetParent, setTargetParent] =
         useState<PlanNodeWithChildren | null>(null);
     const [selectedNode, setSelectedNode] =
         useState<PlanNodeWithChildren | null>(null);
-
-    const currentScenario = useCurrentScenario();
-    const currentScenarioId = currentScenario.id;
 
     const handleCreateRoot = () => {
         setTargetParent(null);
@@ -147,6 +151,14 @@ export function PlanNodeExplorer() {
         setIsDialogOpen(true);
     };
 
+    const treeNodes = useMemo(() => {
+        if (!flatNodes) return [];
+        return buildTree(flatNodes);
+    }, [flatNodes]);
+
+    if (!activeScenarioId)
+        return <div className="p-4">シナリオが設定されていません</div>;
+
     if (isLoading) return <div className="p-4">読み込み中...</div>;
 
     if (isError)
@@ -156,11 +168,8 @@ export function PlanNodeExplorer() {
             </div>
         );
 
-    // tree構造を生成
-    const treeNodes = buildTree(flatNodes);
-
     return (
-        <div className="border rounded-md bg-white min-h-[400px] py-2 relative">
+        <div className="border rounded-md bg-white min-h-[400px] py-2 relative flex flex-col h-full">
             {/* header */}
             <div className="px-4 py-2 border-b mb-2 flex justify-between items-center">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -199,7 +208,7 @@ export function PlanNodeExplorer() {
             <PlanNodeFormDialog
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
-                scenarioId={currentScenarioId}
+                scenarioId={activeScenarioId}
                 parentNode={targetParent}
             />
         </div>
