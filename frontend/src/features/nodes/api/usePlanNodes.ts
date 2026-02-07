@@ -5,15 +5,22 @@ import type { CreatePlanNodeDTO } from "@/types";
 export const planNodesKeys = {
     all: ["planNodes"] as const,
     lists: () => [...planNodesKeys.all, "list"] as const,
+    byScenario: (scenarioId: string | undefined) =>
+        [...planNodesKeys.all, { scenarioId }] as const,
 };
 
-export const usePlanNodes = () => {
+export const usePlanNodes = (scenarioId?: string) => {
     return useQuery({
-        queryKey: planNodesKeys.all,
+        queryKey: planNodesKeys.byScenario(scenarioId),
         queryFn: async () => {
-            const res = await api.get("/plan-nodes");
+            if (!scenarioId) return [];
+
+            const res = await api.get("/plan-nodes", {
+                params: { scenario_id: scenarioId },
+            });
             return res.data;
         },
+        enabled: !!scenarioId,
     });
 };
 
