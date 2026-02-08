@@ -27,8 +27,13 @@ export function NodeDetailPanel({ node, onDeleted }: Props) {
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
     const currentScenario = useCurrentScenario();
+
+    console.log("*** Current Scenario ID: ", currentScenario?.id);
+    console.log("*** Selected Node: ", node);
+    console.log("*** Node Scenario: ", node?.scenario_id);
+
     const isReadOnly =
-        node && currentScenario && node.scenario_id !== currentScenario;
+        node && currentScenario && node.scenario_id !== currentScenario.id;
 
     const executeDelete = async () => {
         if (!node) return;
@@ -71,10 +76,10 @@ export function NodeDetailPanel({ node, onDeleted }: Props) {
                         <Button
                             variant="outline"
                             size="icon"
-                            className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                            className=" hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                             onClick={() => setIsDeleteAlertOpen(true)}
                         >
-                            <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-600" />
+                            <Trash2 className="w-4 h-4 text-slate-600 hover:text-red-600" />
                         </Button>
                     </div>
                 )}
