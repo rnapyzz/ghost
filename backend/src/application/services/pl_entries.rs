@@ -3,6 +3,7 @@ use rust_decimal::Decimal;
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
+use crate::domain::scenarios::ScenarioRepository;
 use crate::{
     domain::{
         history::{ChangeType, PlEntryHistory, PlEntryHistoryRepository},
@@ -12,24 +13,72 @@ use crate::{
     presentation::dtos::SavePlEntryRequest,
 };
 
-pub struct PlEntryService<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
-{
+pub struct PlEntryService<
+    R: PlEntryRepository,
+    N: PlanNodeRepository,
+    H: PlEntryHistoryRepository,
+    S: ScenarioRepository,
+> {
     pool: PgPool,
     entry_repo: R,
     node_repo: N,
     history_repo: H,
+    scenario_repo: S,
 }
 
-impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
-    PlEntryService<R, N, H>
+impl<
+    R: PlEntryRepository,
+    N: PlanNodeRepository,
+    H: PlEntryHistoryRepository,
+    S: ScenarioRepository,
+> PlEntryService<R, N, H, S>
 {
-    pub fn new(pool: PgPool, entry_repo: R, node_repo: N, history_repo: H) -> Self {
+    pub fn new(
+        pool: PgPool,
+        entry_repo: R,
+        node_repo: N,
+        history_repo: H,
+        scenario_repo: S,
+    ) -> Self {
         Self {
             pool,
             entry_repo,
             node_repo,
             history_repo,
+            scenario_repo,
         }
+    }
+
+    // 書き込み権限とノードタイプのチェックを行うヘルパーメソッド
+    async fn ensure_writable(&self, node_id: Uuid) -> anyhow::Result<()> {
+        // 存在確認
+        let node = self
+            .node_repo
+            .find_by_id(node_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Node not found"))?;
+
+        // ノードのタイプチェック
+        if !node.node_type.is_entity() {
+            return Err(anyhow::anyhow!(
+                "Cannot input entries to Container nodes (Initiative/Project/SubProject)"
+            ));
+        }
+
+        // シナリオの書き込み権限チェック
+        let scenario = self
+            .scenario_repo
+            .find_by_id(node.scenario_id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Scenario not found"))?;
+
+        if !scenario.is_current {
+            return Err(anyhow::anyhow!(
+                "Read-Only: Past scenarios cannot be edited"
+            ));
+        }
+
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -43,18 +92,8 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
         description: Option<String>,
         user_id: Uuid,
     ) -> anyhow::Result<PlEntry> {
-        // ノードの種類チェック
-        let node = self
-            .node_repo
-            .find_by_id(node_id)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Node not found"))?;
-
-        if !node.node_type.is_entity() {
-            return Err(anyhow::anyhow!(
-                "Cannot input entries to Container nodes (Initiative/Project/SubProject)"
-            ));
-        }
+        // チェックを実施
+        self.ensure_writable(node_id).await?;
 
         // トランザクション開始
         let mut tx = self.pool.begin().await?;
@@ -89,14 +128,7 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
 
         for req in requests {
             // ノードの種類チェック
-            let node = self
-                .node_repo
-                .find_by_id(req.node_id)
-                .await?
-                .ok_or_else(|| anyhow::anyhow!("Node not found"))?;
-            if !node.node_type.is_entity() {
-                return Err(anyhow::anyhow!("Cannot input entries to Container nodes"));
-            }
+            self.ensure_writable(req.node_id).await?;
 
             // ロジックの実行
             self.save_entry_logic(
@@ -135,6 +167,11 @@ impl<R: PlEntryRepository, N: PlanNodeRepository, H: PlEntryHistoryRepository>
 
         if let Some(mut entry) = existing_entries {
             // update
+
+            // 変更がない場合はスキップ
+            if entry.amount == amount && entry.description == description {
+                return Ok(entry);
+            }
             // 履歴保存用帯ジェクトを作成
             let history = PlEntryHistory::new(
                 entry.id,
