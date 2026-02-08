@@ -177,7 +177,7 @@ export function PlanNodeExplorer({ scenarioId }: { scenarioId?: string }) {
                 </span>
                 <Button variant="ghost" size="sm" onClick={handleCreateRoot}>
                     <Plus className="w-4 h-4 mr-1" />
-                    Node
+                    Root
                 </Button>
             </div>
 
