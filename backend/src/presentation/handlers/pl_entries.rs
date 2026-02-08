@@ -7,6 +7,7 @@ use axum::{
 
 use validator::Validate;
 
+use crate::infrastructure::persistence::scenarios::ScenarioRepositoryImpl;
 use crate::{
     application::services::pl_entries::PlEntryService,
     infrastructure::persistence::{
@@ -32,8 +33,15 @@ pub async fn save(
     let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
     let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
     let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
 
-    let service = PlEntryService::new(state.pool.clone(), entry_repo, node_repo, history_repo);
+    let service = PlEntryService::new(
+        state.pool.clone(),
+        entry_repo,
+        node_repo,
+        history_repo,
+        scenario_repo,
+    );
 
     match service
         .save_entry(
@@ -72,14 +80,28 @@ pub async fn bulk_save(
     let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
     let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
     let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
 
-    let service = PlEntryService::new(state.pool.clone(), entry_repo, node_repo, history_repo);
+    let service = PlEntryService::new(
+        state.pool.clone(),
+        entry_repo,
+        node_repo,
+        history_repo,
+        scenario_repo,
+    );
 
     match service.save_bulk(payload.entries, auth_user.id).await {
         Ok(_) => Ok((StatusCode::OK, "Bulk save successful")),
         Err(e) => {
-            tracing::error!("Bulk save error: {}", e);
-            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+            let msg = e.to_string();
+            if msg.contains("Read-Only") {
+                Err((StatusCode::FORBIDDEN, msg))
+            } else if msg.contains("Cannot input entries") {
+                Err((StatusCode::BAD_REQUEST, msg))
+            } else {
+                tracing::error!("Bulk save error: {}", e);
+                Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+            }
         }
     }
 }
@@ -92,8 +114,15 @@ pub async fn list(
     let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
     let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
     let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
 
-    let service = PlEntryService::new(state.pool.clone(), entry_repo, node_repo, history_repo);
+    let service = PlEntryService::new(
+        state.pool.clone(),
+        entry_repo,
+        node_repo,
+        history_repo,
+        scenario_repo,
+    );
 
     match service
         .list_by_node(query.node_id, query.entry_category)
