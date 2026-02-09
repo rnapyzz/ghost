@@ -3,6 +3,8 @@ use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use uuid::Uuid;
 use validator::Validate;
 
+use crate::infrastructure::persistence::pl_entries::PlEntryRepositoryImpl;
+use crate::infrastructure::persistence::plan_nodes::PlanNodeRepositoryImpl;
 use crate::{
     application::services::scenarios::ScenarioService,
     domain::user::UserRole,
@@ -24,8 +26,11 @@ pub async fn create(
         return Err((StatusCode::BAD_REQUEST, format!("Validation error: {}", e)));
     }
 
-    let repo = ScenarioRepositoryImpl::new(state.pool);
-    let service = ScenarioService::new(repo);
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+    let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
+
+    let service = ScenarioService::new(scenario_repo, node_repo, entry_repo);
 
     match service
         .create(
@@ -49,8 +54,11 @@ pub async fn list(
     State(state): State<AppState>,
     _auth_user: AuthUser,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let repo = ScenarioRepositoryImpl::new(state.pool);
-    let service = ScenarioService::new(repo);
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+    let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
+
+    let service = ScenarioService::new(scenario_repo, node_repo, entry_repo);
 
     match service.list_all().await {
         Ok(res) => Ok((StatusCode::OK, Json(res))),
@@ -62,8 +70,11 @@ pub async fn activate(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let repo = ScenarioRepositoryImpl::new(state.pool);
-    let service = ScenarioService::new(repo);
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+    let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
+
+    let service = ScenarioService::new(scenario_repo, node_repo, entry_repo);
 
     match service.activate(id).await {
         Ok(_) => Ok(StatusCode::NO_CONTENT),
