@@ -6,12 +6,12 @@ use crate::domain::pl_entries::{EntryCategory, PlEntry, PlEntryRepository};
 
 #[derive(Debug, Clone)]
 pub struct PlEntryRepositoryImpl {
-    _pool: PgPool,
+    pool: PgPool,
 }
 
 impl PlEntryRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        Self { _pool: pool }
+        Self { pool: pool }
     }
 }
 
@@ -174,5 +174,64 @@ impl PlEntryRepository for PlEntryRepositoryImpl {
         .await?;
 
         Ok(recs)
+    }
+
+    async fn find_by_node_ids(&self, node_ids: Vec<Uuid>) -> anyhow::Result<Vec<PlEntry>> {
+        let entries = sqlx::query_as!(
+            PlEntry,
+            r#"SELECT
+                id,
+                target_month,
+                entry_category as "entry_category: _",
+                node_id,
+                account_item_id,
+                amount,
+                description,
+                created_at,
+                updated_at,
+                created_by,
+                updated_by
+            FROM pl_entries WHERE node_id = ANY($1)"#,
+            &node_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(entries)
+    }
+
+    async fn create_many(&self, entries: Vec<PlEntry>) -> anyhow::Result<()> {
+        for entry in entries {
+            sqlx::query!(
+                r#"
+                INSERT INTO pl_entries (
+                    id,
+                    target_month,
+                    entry_category,
+                    node_id,
+                    account_item_id,
+                    amount,
+                    description,
+                    created_at,
+                    updated_at,
+                    created_by,
+                    updated_by
+                ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"#,
+                entry.id,
+                entry.target_month,
+                entry.entry_category as _,
+                entry.node_id,
+                entry.account_item_id,
+                entry.amount,
+                entry.description,
+                entry.created_at,
+                entry.updated_at,
+                entry.created_by,
+                entry.updated_by
+            )
+            .execute(&self.pool)
+            .await?;
+        }
+        Ok(())
     }
 }

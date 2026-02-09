@@ -1,7 +1,8 @@
+use chrono::{DateTime, Utc};
 use sqlx::{PgPool, QueryBuilder};
 use uuid::Uuid;
 
-use crate::domain::plan_nodes::{PlanNode, PlanNodeRepository, UpdatePlanNodeParams};
+use crate::domain::plan_nodes::{NodeType, PlanNode, PlanNodeRepository, UpdatePlanNodeParams};
 
 #[derive(Debug, Clone)]
 pub struct PlanNodeRepositoryImpl {
@@ -75,6 +76,51 @@ impl PlanNodeRepository for PlanNodeRepositoryImpl {
         .await?;
 
         Ok(rec)
+    }
+
+    async fn create_many(&self, nodes: Vec<PlanNode>) -> anyhow::Result<()> {
+        if nodes.is_empty() {
+            return Ok(());
+        }
+
+        for node in nodes {
+            sqlx::query!(
+                r#"
+                INSERT INTO plan_nodes (
+                    id,
+                    scenario_id,
+                    parent_id,
+                    lineage_id,
+                    title,
+                    description,
+                    node_type,
+                    display_order,
+                    service_id,
+                    created_at,
+                    updated_at,
+                    created_by,
+                    updated_by
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                "#,
+                node.id,
+                node.scenario_id,
+                node.parent_id,
+                node.lineage_id,
+                node.title,
+                node.description,
+                node.node_type as _,
+                node.display_order,
+                node.service_id,
+                node.created_at,
+                node.updated_at,
+                node.created_by,
+                node.updated_by
+            )
+            .execute(&self.pool)
+            .await?;
+        }
+
+        Ok(())
     }
 
     async fn find_recent(&self, limit: i64) -> anyhow::Result<Vec<PlanNode>> {
