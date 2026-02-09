@@ -66,6 +66,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/scenarios", get(scenarios::list))
         .route("/scenarios", post(scenarios::create))
         .route("/scenarios/{id}/activate", post(scenarios::activate))
+        .route("/scenarios/{id}/rollover", post(scenarios::rollover))
         .route("/services", get(services::list))
         .route("/services", post(services::create))
         .route("/plan-nodes", get(plan_nodes::list))
