@@ -139,3 +139,11 @@ pub struct ListPlEntryQuery {
     pub node_id: Uuid,
     pub entry_category: EntryCategory,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct RolloverScenarioRequest {
+    #[validate(length(min = 1, message = "Name is required"))]
+    pub name: String,
+    pub start_date: NaiveDate,
+    pub end_date: NaiveDate,
+}

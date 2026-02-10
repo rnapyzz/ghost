@@ -1,7 +1,7 @@
 use crate::domain::pl_entries::{PlEntry, PlEntryRepository};
 use crate::domain::plan_nodes::{PlanNode, PlanNodeRepository};
 use crate::domain::scenarios::{Scenario, ScenarioRepository};
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -99,10 +99,10 @@ where
                 node_type: old_node.node_type.clone(),
                 display_order: old_node.display_order,
                 service_id: old_node.service_id,
-                created_at: old_node.created_at,
-                updated_at: old_node.updated_at,
-                created_by: old_node.created_by,
-                updated_by: old_node.updated_by,
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                created_by: user_id,
+                updated_by: user_id,
                 deleted_at: None,
                 deleted_by: None,
             };
@@ -126,10 +126,10 @@ where
                     account_item_id: old_entry.account_item_id,
                     amount: old_entry.amount,
                     description: old_entry.description.clone(),
-                    created_at: old_entry.created_at,
-                    updated_at: old_entry.updated_at,
-                    created_by: old_entry.created_by,
-                    updated_by: old_entry.updated_by,
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                    created_by: user_id,
+                    updated_by: user_id,
                 };
                 new_entries.push(new_entry);
             }
