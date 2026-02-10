@@ -2,6 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api.ts";
 import type { CreateScenarioDTO, Scenario, UpdateScenarioDTO } from "@/types";
 
+type RolloverScenarioDTO = {
+    name: string;
+    start_date: string;
+    end_date: string;
+};
+
 export const scenarioKeys = {
     all: ["scenarios"] as const,
 };
@@ -54,5 +60,25 @@ export const useScenarioMutations = () => {
         },
     });
 
-    return { createScenario, activateScenario, updateScenario, deleteScenario };
+    const rolloverScenario = useMutation({
+        mutationFn: ({
+            sourceId,
+            data,
+        }: {
+            sourceId: string;
+            data: RolloverScenarioDTO;
+        }) => api.post(`/scenarios/${sourceId}/rollover`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["scenarios"] });
+            queryClient.invalidateQueries({ queryKey: ["planNodes"] });
+        },
+    });
+
+    return {
+        createScenario,
+        activateScenario,
+        updateScenario,
+        deleteScenario,
+        rolloverScenario,
+    };
 };
