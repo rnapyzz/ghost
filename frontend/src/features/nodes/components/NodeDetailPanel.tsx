@@ -28,10 +28,6 @@ export function NodeDetailPanel({ node, onDeleted }: Props) {
 
     const currentScenario = useCurrentScenario();
 
-    console.log("*** Current Scenario ID: ", currentScenario?.id);
-    console.log("*** Selected Node: ", node);
-    console.log("*** Node Scenario: ", node?.scenario_id);
-
     const isReadOnly =
         node && currentScenario && node.scenario_id !== currentScenario.id;
 
