@@ -5,6 +5,7 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 import type { Scenario } from "@/types";
+import { ScenarioRolloverDialog } from "@/features/scenarios/components/ScenarioRolloverDialog.tsx";
 
 export function ScenarioSettingPage() {
     const { data: scenarios, isLoading } = useScenarios();
@@ -41,36 +42,41 @@ export function ScenarioSettingPage() {
                         <h3 className="text-slate-900 truncate font-">
                             {scenario.name}
                         </h3>
-                        <Button
-                            variant={
-                                scenario.is_current ? "outline" : "default"
-                            }
-                            disabled={
-                                scenario.is_current ||
-                                activateScenario.isPending
-                            }
-                            onClick={() => activateScenario.mutate(scenario.id)}
-                            className={
-                                scenario.is_current
-                                    ? "w-32 border-green-400 bg-green-200 text-green-700 hover:bg-green-100"
-                                    : "w-32 border-blue-200 bg-blue-500 text-white hover:bg-blue-600"
-                            }
-                        >
-                            {activateScenario.isPending &&
-                            !scenario.is_current ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : scenario.is_current ? (
-                                <>
-                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                    選択中
-                                </>
-                            ) : (
-                                <>
-                                    <Circle className="w-4 h-4 mr-2" />
-                                    有効化
-                                </>
-                            )}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <ScenarioRolloverDialog sourceScenario={scenario} />
+                            <Button
+                                variant={
+                                    scenario.is_current ? "outline" : "default"
+                                }
+                                disabled={
+                                    scenario.is_current ||
+                                    activateScenario.isPending
+                                }
+                                onClick={() =>
+                                    activateScenario.mutate(scenario.id)
+                                }
+                                className={
+                                    scenario.is_current
+                                        ? "w-32 border-green-400 bg-green-200 text-green-700 hover:bg-green-100"
+                                        : "w-32 border-blue-200 bg-blue-500 text-white hover:bg-blue-600"
+                                }
+                            >
+                                {activateScenario.isPending &&
+                                !scenario.is_current ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : scenario.is_current ? (
+                                    <>
+                                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                                        選択中
+                                    </>
+                                ) : (
+                                    <>
+                                        <Circle className="w-4 h-4 mr-2" />
+                                        有効化
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 ))}
                 {scenarios?.length === 0 && (
