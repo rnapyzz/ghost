@@ -1,10 +1,11 @@
+use axum::extract::Path;
 use axum::{
     Json,
     extract::{Query, State},
     http::StatusCode,
     response::IntoResponse,
 };
-
+use uuid::Uuid;
 use validator::Validate;
 
 use crate::infrastructure::persistence::scenarios::ScenarioRepositoryImpl;
@@ -130,5 +131,32 @@ pub async fn list(
     {
         Ok(list) => Ok((StatusCode::OK, Json(list))),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
+}
+
+pub async fn list_by_scenario(
+    State(state): State<AppState>,
+    _auth_user: AuthUser,
+    Path(scenario_id): Path<Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let entry_repo = PlEntryRepositoryImpl::new(state.pool.clone());
+    let node_repo = PlanNodeRepositoryImpl::new(state.pool.clone());
+    let history_repo = PlEntryHistoryRepositoryImpl::new(state.pool.clone());
+    let scenario_repo = ScenarioRepositoryImpl::new(state.pool.clone());
+
+    let service = PlEntryService::new(
+        state.pool.clone(),
+        entry_repo,
+        node_repo,
+        history_repo,
+        scenario_repo,
+    );
+
+    match service.list_by_scenario(scenario_id).await {
+        Ok(entries) => Ok((StatusCode::OK, Json(entries))),
+        Err(e) => {
+            tracing::error!("List entries by scenario error: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }

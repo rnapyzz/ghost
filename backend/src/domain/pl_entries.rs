@@ -77,5 +77,6 @@ pub trait PlEntryRepository: Send + Sync {
     ) -> anyhow::Result<Vec<PlEntry>>;
 
     async fn find_by_node_ids(&self, node_ids: Vec<Uuid>) -> anyhow::Result<Vec<PlEntry>>;
+    async fn find_by_scenario_id(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlEntry>>;
     async fn create_many(&self, entries: Vec<PlEntry>) -> anyhow::Result<()>;
 }
