@@ -11,7 +11,7 @@ pub struct PlEntryRepositoryImpl {
 
 impl PlEntryRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool: pool }
+        Self { pool }
     }
 }
 
@@ -193,6 +193,35 @@ impl PlEntryRepository for PlEntryRepositoryImpl {
                 updated_by
             FROM pl_entries WHERE node_id = ANY($1)"#,
             &node_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(entries)
+    }
+
+    async fn find_by_scenario_id(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlEntry>> {
+        let entries = sqlx::query_as!(
+            PlEntry,
+            r#"
+            SELECT
+                e.id,
+                e.target_month,
+                e.entry_category as "entry_category: _",
+                e.node_id,
+                e.account_item_id,
+                e.amount,
+                e.description,
+                e.created_at,
+                e.updated_at,
+                e.created_by,
+                e.updated_by
+            FROM pl_entries e
+            JOIN plan_nodes n ON e.node_id = n.id
+            WHERE n.scenario_id = $1
+            ORDER BY e.node_id, e.target_month
+            "#,
+            scenario_id
         )
         .fetch_all(&self.pool)
         .await?;

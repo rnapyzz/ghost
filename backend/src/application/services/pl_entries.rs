@@ -233,4 +233,8 @@ impl<
             .find_by_node(&mut conn, node_id, &category)
             .await
     }
+
+    pub async fn list_by_scenario(&self, scenario_id: Uuid) -> anyhow::Result<Vec<PlEntry>> {
+        self.entry_repo.find_by_scenario_id(scenario_id).await
+    }
 }
